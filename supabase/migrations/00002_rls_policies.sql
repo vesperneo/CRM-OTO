@@ -169,6 +169,9 @@ CREATE POLICY "calls_insert" ON calls FOR INSERT
 CREATE POLICY "calls_update" ON calls FOR UPDATE
   USING (is_sup_crc() OR (auth_role() = 'agent_crc' AND agent_id = auth.uid()));
 
+CREATE POLICY "calls_all_admin" ON calls FOR ALL
+  USING (is_admin());
+
 -- ============================================================
 -- QUALIFICATION ANSWERS
 -- ============================================================
@@ -176,6 +179,8 @@ CREATE POLICY "qa_select" ON qualification_answers FOR SELECT
   USING (is_crc() OR is_admin());
 CREATE POLICY "qa_insert" ON qualification_answers FOR INSERT
   WITH CHECK (is_crc() AND agent_id = auth.uid());
+CREATE POLICY "qa_all_admin" ON qualification_answers FOR ALL
+  USING (is_admin());
 
 -- ============================================================
 -- APPOINTMENTS
@@ -223,6 +228,9 @@ CREATE POLICY "tasks_insert" ON tasks_relances FOR INSERT
 CREATE POLICY "tasks_update" ON tasks_relances FOR UPDATE
   USING (assigne_a = auth.uid() OR is_sup_crc() OR is_admin());
 
+CREATE POLICY "tasks_all_admin" ON tasks_relances FOR ALL
+  USING (is_admin());
+
 -- ============================================================
 -- AGENT_STATUS
 -- ============================================================
@@ -257,6 +265,9 @@ CREATE POLICY "activities_select" ON activities FOR SELECT
 
 CREATE POLICY "activities_insert" ON activities FOR INSERT
   WITH CHECK (auteur_id = auth.uid() OR auth.uid() IS NOT NULL);
+
+CREATE POLICY "activities_all_admin" ON activities FOR ALL
+  USING (is_admin());
 
 -- ============================================================
 -- TABLES RÉFÉRENTIELLES (sources, tags, scripts, etc.)

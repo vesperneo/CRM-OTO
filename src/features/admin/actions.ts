@@ -286,3 +286,91 @@ export async function saveDisposition(input: {
   revalidatePath('/crc/file')
   return { success: true }
 }
+
+// ------------------------------------------------------------
+// Suppressions Administrateur
+// ------------------------------------------------------------
+
+export async function deleteTeam(teamId: string) {
+  const { supabase, error } = await ensureAdmin()
+  if (error || !supabase) return { success: false, error }
+
+  // Détacher les profils associés
+  await (supabase.from('profiles') as any)
+    .update({ team_id: null })
+    .eq('team_id', teamId)
+
+  const { error: delError } = await (supabase.from('teams') as any)
+    .delete()
+    .eq('id', teamId)
+
+  if (delError) return { success: false, error: delError.message }
+
+  revalidateAdmin()
+  return { success: true }
+}
+
+export async function deleteSite(siteId: string) {
+  const { supabase, error } = await ensureAdmin()
+  if (error || !supabase) return { success: false, error }
+
+  // Détacher les leads pointant vers ce site
+  await (supabase.from('leads') as any)
+    .update({ site_prefere_id: null })
+    .eq('site_prefere_id', siteId)
+
+  const { error: delError } = await (supabase.from('sites') as any)
+    .delete()
+    .eq('id', siteId)
+
+  if (delError) return { success: false, error: delError.message }
+
+  revalidateAdmin()
+  revalidatePath('/rendez-vous')
+  return { success: true }
+}
+
+export async function deleteDisposition(dispositionId: string) {
+  const { supabase, error } = await ensureAdmin()
+  if (error || !supabase) return { success: false, error }
+
+  const { error: delError } = await (supabase.from('call_dispositions') as any)
+    .delete()
+    .eq('id', dispositionId)
+
+  if (delError) return { success: false, error: delError.message }
+
+  revalidateAdmin()
+  revalidatePath('/crc/file')
+  return { success: true }
+}
+
+export async function deleteUser(userId: string) {
+  const { supabase, user, error } = await ensureAdmin()
+  if (error || !supabase || !user) return { success: false, error }
+
+  if (userId === user.id) {
+    return {
+      success: false,
+      error: 'Vous ne pouvez pas supprimer votre propre compte administrateur.',
+    }
+  }
+
+  if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const adminClient = await createAdminClient()
+      await adminClient.auth.admin.deleteUser(userId)
+    } catch {}
+  }
+
+  const { error: delError } = await (supabase.from('profiles') as any)
+    .delete()
+    .eq('id', userId)
+
+  if (delError) return { success: false, error: delError.message }
+
+  revalidateAdmin()
+  revalidatePath('/crc/supervision')
+  return { success: true }
+}
+

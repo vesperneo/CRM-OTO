@@ -28,6 +28,7 @@ import {
   Users,
   X,
   XCircle,
+  Trash2,
   type LucideIcon,
 } from 'lucide-react'
 import { formatDate, getInitiales } from '@/lib/utils'
@@ -38,6 +39,10 @@ import {
   saveSite,
   saveTeam,
   updateUserProfile,
+  deleteUser,
+  deleteTeam,
+  deleteSite,
+  deleteDisposition,
 } from '@/features/admin/actions'
 import type {
   AdminData,
@@ -606,6 +611,75 @@ export default function AdminView({
     flash(disp.actif ? 'Disposition désactivée.' : 'Disposition réactivée.')
   }
 
+  async function handleDeleteUser(user: AdminUser) {
+    if (!confirm(`Supprimer définitivement l'utilisateur ${user.prenom ?? ''} ${user.nom} ?`)) return
+    setSaving(true)
+    if (!isDemo) {
+      const res = await deleteUser(user.id)
+      if (!res.success) {
+        setSaving(false)
+        fail(res.error ?? 'Suppression impossible.')
+        return
+      }
+    }
+    setUsers((prev) => prev.filter((u) => u.id !== user.id))
+    setSaving(false)
+    router.refresh()
+    flash('Utilisateur supprimé.')
+  }
+
+  async function handleDeleteTeam(team: AdminTeam) {
+    if (!confirm(`Supprimer l'équipe "${team.nom}" ?`)) return
+    setSaving(true)
+    if (!isDemo) {
+      const res = await deleteTeam(team.id)
+      if (!res.success) {
+        setSaving(false)
+        fail(res.error ?? 'Suppression impossible.')
+        return
+      }
+    }
+    setTeams((prev) => prev.filter((t) => t.id !== team.id))
+    setSaving(false)
+    router.refresh()
+    flash('Équipe supprimée.')
+  }
+
+  async function handleDeleteSite(site: AdminSite) {
+    if (!confirm(`Supprimer le site "${site.nom}" ?`)) return
+    setSaving(true)
+    if (!isDemo) {
+      const res = await deleteSite(site.id)
+      if (!res.success) {
+        setSaving(false)
+        fail(res.error ?? 'Suppression impossible.')
+        return
+      }
+    }
+    setSites((prev) => prev.filter((s) => s.id !== site.id))
+    setSaving(false)
+    router.refresh()
+    flash('Site supprimé.')
+  }
+
+  async function handleDeleteDisposition(disp: AdminDisposition) {
+    if (!confirm(`Supprimer la disposition "${disp.libelle}" ?`)) return
+    setSaving(true)
+    if (!isDemo) {
+      const res = await deleteDisposition(disp.id)
+      if (!res.success) {
+        setSaving(false)
+        fail(res.error ?? 'Suppression impossible.')
+        return
+      }
+    }
+    setDispositions((prev) => prev.filter((d) => d.id !== disp.id))
+    setSaving(false)
+    router.refresh()
+    flash('Disposition supprimée.')
+  }
+
+
   return (
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -1045,14 +1119,25 @@ export default function AdminView({
                   <span className={`text-[11px] font-semibold ${u.actif ? 'text-emerald-700' : 'text-gray-400'}`}>
                     {u.actif ? 'Compte actif' : 'Compte inactif'}
                   </span>
-                  <button
-                    type="button"
-                    disabled={saving}
-                    onClick={() => patchUser(u.id, { actif: !u.actif })}
-                    className="px-2.5 py-1.5 rounded-lg border border-gray-200 text-[11px] font-semibold text-gray-700"
-                  >
-                    {u.actif ? 'Désactiver' : 'Réactiver'}
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={() => patchUser(u.id, { actif: !u.actif })}
+                      className="px-2.5 py-1.5 rounded-lg border border-gray-200 text-[11px] font-semibold text-gray-700 hover:bg-gray-50"
+                    >
+                      {u.actif ? 'Désactiver' : 'Réactiver'}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={() => handleDeleteUser(u)}
+                      className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
+                      title="Supprimer l'utilisateur"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -1105,7 +1190,7 @@ export default function AdminView({
                   <p className="text-[11px] text-gray-400 mt-0.5">
                     {t.membres} membre{t.membres > 1 ? 's' : ''}
                   </p>
-                  <div className="flex items-center gap-2 mt-3">
+                  <div className="flex items-center gap-1.5 mt-3">
                     <button
                       type="button"
                       onClick={() => openTeam(t)}
@@ -1120,11 +1205,20 @@ export default function AdminView({
                       onClick={() => toggleTeam(t)}
                       className={`px-2 py-1.5 rounded-lg text-[11px] font-semibold border ${
                         t.actif
-                          ? 'border-red-100 text-red-600 hover:bg-red-50'
-                          : 'border-emerald-100 text-emerald-600 hover:bg-emerald-50'
+                          ? 'border-amber-200 text-amber-700 hover:bg-amber-50'
+                          : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
                       }`}
                     >
                       {t.actif ? 'Désactiver' : 'Activer'}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={() => handleDeleteTeam(t)}
+                      className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
+                      title="Supprimer l'équipe"
+                    >
+                      <Trash2 className="w-3 h-3" />
                     </button>
                   </div>
                 </div>
@@ -1176,7 +1270,7 @@ export default function AdminView({
                   {s.telephone && (
                     <p className="text-[10px] text-gray-400 mt-0.5">{s.telephone}</p>
                   )}
-                  <div className="flex items-center gap-2 mt-3">
+                  <div className="flex items-center gap-1.5 mt-3">
                     <button
                       type="button"
                       onClick={() => openSite(s)}
@@ -1191,11 +1285,20 @@ export default function AdminView({
                       onClick={() => toggleSite(s)}
                       className={`px-2 py-1.5 rounded-lg text-[11px] font-semibold border ${
                         s.actif
-                          ? 'border-red-100 text-red-600 hover:bg-red-50'
-                          : 'border-emerald-100 text-emerald-600 hover:bg-emerald-50'
+                          ? 'border-amber-200 text-amber-700 hover:bg-amber-50'
+                          : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
                       }`}
                     >
                       {s.actif ? 'Fermer' : 'Ouvrir'}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={() => handleDeleteSite(s)}
+                      className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
+                      title="Supprimer le site"
+                    >
+                      <Trash2 className="w-3 h-3" />
                     </button>
                   </div>
                 </div>
@@ -1284,12 +1387,21 @@ export default function AdminView({
                             onClick={() => toggleDisposition(d)}
                             className={`p-1.5 rounded-lg border ${
                               d.actif
-                                ? 'border-red-100 text-red-600 hover:bg-red-50'
-                                : 'border-emerald-100 text-emerald-600 hover:bg-emerald-50'
+                                ? 'border-amber-200 text-amber-600 hover:bg-amber-50'
+                                : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
                             }`}
                             title={d.actif ? 'Désactiver' : 'Activer'}
                           >
                             <Power className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={saving}
+                            onClick={() => handleDeleteDisposition(d)}
+                            className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
+                            title="Supprimer la disposition"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </td>

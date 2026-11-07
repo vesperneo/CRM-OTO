@@ -19,6 +19,7 @@ import { LEAD_STATUSES, LEAD_SOURCES } from '@/lib/constants'
 import LeadTimeline from '@/components/leads/LeadTimeline'
 import LeadStatusChanger from '@/components/leads/LeadStatusChanger'
 import LeadEditButton from '@/components/leads/LeadEditButton'
+import LeadDeleteButton from '@/components/leads/LeadDeleteButton'
 
 export default async function LeadDetailPage({
   params,
@@ -143,6 +144,11 @@ export default async function LeadDetailPage({
             Session d'appel CRC
           </Link>
           <LeadEditButton lead={prospect} sources={sourceOptions} sites={sites} />
+          <LeadDeleteButton
+            leadId={prospect.id}
+            leadName={`${prospect.prenom ?? ''} ${prospect.nom}`.trim()}
+            redirectToLeads
+          />
         </div>
       </div>
 

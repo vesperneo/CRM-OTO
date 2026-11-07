@@ -6,6 +6,7 @@ import { Plus, Filter, Search, Download, Phone, Calendar, Columns3, Upload, Chev
 import { formatTelephone, formatTimeAgo, formatMontant } from '@/lib/utils'
 import { LEAD_STATUSES } from '@/lib/constants'
 import LeadFormModal from './LeadFormModal'
+import LeadDeleteButton from './LeadDeleteButton'
 
 interface Props {
   initialLeads: any[]
@@ -226,6 +227,11 @@ export default function LeadsView({ initialLeads, sources = [], sites = [] }: Pr
                           >
                             <ChevronRight className="w-4 h-4" />
                           </Link>
+                          <LeadDeleteButton
+                            leadId={lead.id}
+                            leadName={`${lead.prenom ?? ''} ${lead.nom}`.trim()}
+                            variant="icon"
+                          />
                         </div>
                       </td>
                     </tr>

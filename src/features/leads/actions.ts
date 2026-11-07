@@ -259,3 +259,58 @@ export async function importLeadsBatch(leadsList: LeadCreateInput[]) {
     result: { imported, duplicates, errors, total: leadsList.length },
   }
 }
+
+// Suppression complète d'un lead (Admin & Superviseur)
+export async function deleteLead(leadId: string) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const isDemo =
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
+
+  if (!user && !isDemo) {
+    return { success: false, error: 'Non authentifié.' }
+  }
+
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const canDelete =
+      profile?.role === 'admin' || profile?.role === 'superviseur_crc'
+
+    if (!canDelete && !isDemo) {
+      return {
+        success: false,
+        error: 'Privilèges insuffisants. Seul un administrateur peut supprimer un lead.',
+      }
+    }
+  }
+
+  // Supprimer les enregistrements liés explicitement par précaution
+  await (supabase.from('activities') as any).delete().eq('lead_id', leadId)
+  await (supabase.from('appointments') as any).delete().eq('lead_id', leadId)
+  await (supabase.from('calls') as any).delete().eq('lead_id', leadId)
+  await (supabase.from('qualification_answers') as any).delete().eq('lead_id', leadId)
+  await (supabase.from('tasks_relances') as any).delete().eq('lead_id', leadId)
+  await (supabase.from('lead_tags') as any).delete().eq('lead_id', leadId)
+
+  const { error } = await (supabase.from('leads') as any)
+    .delete()
+    .eq('id', leadId)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/leads')
+  revalidatePath('/leads/kanban')
+  revalidatePath('/dashboard')
+  revalidatePath('/crc/file')
+  return { success: true }
+}
+

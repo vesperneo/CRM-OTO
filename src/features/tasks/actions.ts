@@ -60,3 +60,19 @@ export async function rescheduleTask(taskId: string, newEcheance: string) {
   revalidatePath('/taches')
   return { success: true }
 }
+
+export async function deleteTask(taskId: string) {
+  const supabase = await createClient()
+
+  const { error } = await (supabase.from('tasks_relances') as any)
+    .delete()
+    .eq('id', taskId)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/taches')
+  return { success: true }
+}
+
+
+

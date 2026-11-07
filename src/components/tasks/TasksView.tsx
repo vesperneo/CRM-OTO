@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Phone, CheckCircle2, Clock, Calendar, MessageCircle, AlertCircle, ChevronRight } from 'lucide-react'
+import { Phone, CheckCircle2, Clock, Calendar, MessageCircle, AlertCircle, ChevronRight, Trash2 } from 'lucide-react'
 import { formatDateTime, formatTimeAgo, formatTelephone, makeWhatsAppLink } from '@/lib/utils'
-import { completeTask, rescheduleTask } from '@/features/tasks/actions'
+import { completeTask, rescheduleTask, deleteTask } from '@/features/tasks/actions'
 
 interface TaskItem {
   id: string
@@ -49,6 +49,12 @@ export default function TasksView({ initialTasks }: Props) {
   async function handleComplete(taskId: string) {
     setTasks(prev => prev.map(t => t.id === taskId ? { ...t, statut: 'terminee' } : t))
     await completeTask(taskId)
+  }
+
+  async function handleDelete(taskId: string) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')) return
+    setTasks(prev => prev.filter(t => t.id !== taskId))
+    await deleteTask(taskId)
   }
 
   return (
@@ -163,6 +169,14 @@ export default function TasksView({ initialTasks }: Props) {
                       Terminer
                     </button>
                   )}
+
+                  <button
+                    onClick={() => handleDelete(t.id)}
+                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg border border-transparent hover:border-red-200 transition-colors"
+                    title="Supprimer la tâche"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
             ))}
