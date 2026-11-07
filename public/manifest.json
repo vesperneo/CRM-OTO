@@ -1,0 +1,17 @@
+{
+  "name": "Otoclic CRM",
+  "short_name": "Otoclic",
+  "description": "Gestion des leads, file d'appels CRC et rendez-vous showroom.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f8fa",
+  "theme_color": "#da3655",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}

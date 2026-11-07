@@ -149,6 +149,16 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+
+        Relationships: [
+          {
+            foreignKeyName: "profiles_team_id_fkey",
+            columns: ["team_id"],
+            isOneToOne: false,
+            referencedRelation: "teams",
+            referencedColumns: ["id"],
+          },
+        ]
       }
 
       // ----------------------------------------------------------
@@ -179,6 +189,8 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+
+        Relationships: []
       }
 
       // ----------------------------------------------------------
@@ -227,6 +239,8 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+
+        Relationships: []
       }
 
       // ----------------------------------------------------------
@@ -248,6 +262,23 @@ export interface Database {
           profile_id?: string
           est_principal?: boolean
         }
+
+        Relationships: [
+          {
+            foreignKeyName: "site_commerciaux_site_id_fkey",
+            columns: ["site_id"],
+            isOneToOne: false,
+            referencedRelation: "sites",
+            referencedColumns: ["id"],
+          },
+          {
+            foreignKeyName: "site_commerciaux_profile_id_fkey",
+            columns: ["profile_id"],
+            isOneToOne: false,
+            referencedRelation: "profiles",
+            referencedColumns: ["id"],
+          },
+        ]
       }
 
       // ----------------------------------------------------------
@@ -275,6 +306,8 @@ export interface Database {
           actif?: boolean
           created_at?: string
         }
+
+        Relationships: []
       }
 
       // ----------------------------------------------------------
@@ -299,6 +332,8 @@ export interface Database {
           couleur?: string
           created_at?: string
         }
+
+        Relationships: []
       }
 
       // ----------------------------------------------------------
@@ -342,6 +377,8 @@ export interface Database {
           import_id: string | null
           source_externe_ref: string | null
           created_by: string | null
+          priorite: number
+          escalade_le: string | null
           created_at: string
           updated_at: string
         }
@@ -382,6 +419,8 @@ export interface Database {
           import_id?: string | null
           source_externe_ref?: string | null
           created_by?: string | null
+          priorite?: number
+          escalade_le?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -422,9 +461,56 @@ export interface Database {
           import_id?: string | null
           source_externe_ref?: string | null
           created_by?: string | null
+          priorite?: number
+          escalade_le?: string | null
           created_at?: string
           updated_at?: string
         }
+
+        Relationships: [
+          {
+            foreignKeyName: "leads_site_prefere_id_fkey",
+            columns: ["site_prefere_id"],
+            isOneToOne: false,
+            referencedRelation: "sites",
+            referencedColumns: ["id"],
+          },
+          {
+            foreignKeyName: "leads_source_id_fkey",
+            columns: ["source_id"],
+            isOneToOne: false,
+            referencedRelation: "sources",
+            referencedColumns: ["id"],
+          },
+          {
+            foreignKeyName: "leads_assigne_crc_a_fkey",
+            columns: ["assigne_crc_a"],
+            isOneToOne: false,
+            referencedRelation: "profiles",
+            referencedColumns: ["id"],
+          },
+          {
+            foreignKeyName: "leads_assigne_commercial_a_fkey",
+            columns: ["assigne_commercial_a"],
+            isOneToOne: false,
+            referencedRelation: "profiles",
+            referencedColumns: ["id"],
+          },
+          {
+            foreignKeyName: "leads_verrouille_par_fkey",
+            columns: ["verrouille_par"],
+            isOneToOne: false,
+            referencedRelation: "profiles",
+            referencedColumns: ["id"],
+          },
+          {
+            foreignKeyName: "leads_created_by_fkey",
+            columns: ["created_by"],
+            isOneToOne: false,
+            referencedRelation: "profiles",
+            referencedColumns: ["id"],
+          },
+        ]
       }
 
       // ----------------------------------------------------------
@@ -443,6 +529,23 @@ export interface Database {
           lead_id?: string
           tag_id?: string
         }
+
+        Relationships: [
+          {
+            foreignKeyName: "lead_tags_lead_id_fkey",
+            columns: ["lead_id"],
+            isOneToOne: false,
+            referencedRelation: "leads",
+            referencedColumns: ["id"],
+          },
+          {
+            foreignKeyName: "lead_tags_tag_id_fkey",
+            columns: ["tag_id"],
+            isOneToOne: false,
+            referencedRelation: "tags",
+            referencedColumns: ["id"],
+          },
+        ]
       }
 
       // ----------------------------------------------------------
@@ -482,6 +585,8 @@ export interface Database {
           actif?: boolean
           created_at?: string
         }
+
+        Relationships: []
       }
 
       // ----------------------------------------------------------
@@ -521,6 +626,16 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+
+        Relationships: [
+          {
+            foreignKeyName: "call_queues_team_id_fkey",
+            columns: ["team_id"],
+            isOneToOne: false,
+            referencedRelation: "teams",
+            referencedColumns: ["id"],
+          },
+        ]
       }
 
       // ----------------------------------------------------------
@@ -557,6 +672,8 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+
+        Relationships: []
       }
 
       // ----------------------------------------------------------
@@ -614,6 +731,37 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+
+        Relationships: [
+          {
+            foreignKeyName: "calls_lead_id_fkey",
+            columns: ["lead_id"],
+            isOneToOne: false,
+            referencedRelation: "leads",
+            referencedColumns: ["id"],
+          },
+          {
+            foreignKeyName: "calls_agent_id_fkey",
+            columns: ["agent_id"],
+            isOneToOne: false,
+            referencedRelation: "profiles",
+            referencedColumns: ["id"],
+          },
+          {
+            foreignKeyName: "calls_disposition_id_fkey",
+            columns: ["disposition_id"],
+            isOneToOne: false,
+            referencedRelation: "call_dispositions",
+            referencedColumns: ["id"],
+          },
+          {
+            foreignKeyName: "calls_script_id_fkey",
+            columns: ["script_id"],
+            isOneToOne: false,
+            referencedRelation: "call_scripts",
+            referencedColumns: ["id"],
+          },
+        ]
       }
 
       // ----------------------------------------------------------
@@ -644,6 +792,30 @@ export interface Database {
           reponses?: Record<string, unknown>
           created_at?: string
         }
+
+        Relationships: [
+          {
+            foreignKeyName: "qualification_answers_lead_id_fkey",
+            columns: ["lead_id"],
+            isOneToOne: false,
+            referencedRelation: "leads",
+            referencedColumns: ["id"],
+          },
+          {
+            foreignKeyName: "qualification_answers_call_id_fkey",
+            columns: ["call_id"],
+            isOneToOne: false,
+            referencedRelation: "calls",
+            referencedColumns: ["id"],
+          },
+          {
+            foreignKeyName: "qualification_answers_agent_id_fkey",
+            columns: ["agent_id"],
+            isOneToOne: false,
+            referencedRelation: "profiles",
+            referencedColumns: ["id"],
+          },
+        ]
       }
 
       // ----------------------------------------------------------
@@ -668,6 +840,16 @@ export interface Database {
           depuis?: string
           updated_at?: string
         }
+
+        Relationships: [
+          {
+            foreignKeyName: "agent_status_agent_id_fkey",
+            columns: ["agent_id"],
+            isOneToOne: true,
+            referencedRelation: "profiles",
+            referencedColumns: ["id"],
+          },
+        ]
       }
 
       // ----------------------------------------------------------
@@ -695,6 +877,16 @@ export interface Database {
           ajoute_par?: string | null
           date_ajout?: string
         }
+
+        Relationships: [
+          {
+            foreignKeyName: "dnc_list_ajoute_par_fkey",
+            columns: ["ajoute_par"],
+            isOneToOne: false,
+            referencedRelation: "profiles",
+            referencedColumns: ["id"],
+          },
+        ]
       }
 
       // ----------------------------------------------------------
@@ -725,6 +917,23 @@ export interface Database {
           auteur_id?: string | null
           created_at?: string
         }
+
+        Relationships: [
+          {
+            foreignKeyName: "activities_lead_id_fkey",
+            columns: ["lead_id"],
+            isOneToOne: false,
+            referencedRelation: "leads",
+            referencedColumns: ["id"],
+          },
+          {
+            foreignKeyName: "activities_auteur_id_fkey",
+            columns: ["auteur_id"],
+            isOneToOne: false,
+            referencedRelation: "profiles",
+            referencedColumns: ["id"],
+          },
+        ]
       }
 
       // ----------------------------------------------------------
@@ -773,6 +982,30 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+
+        Relationships: [
+          {
+            foreignKeyName: "tasks_relances_lead_id_fkey",
+            columns: ["lead_id"],
+            isOneToOne: false,
+            referencedRelation: "leads",
+            referencedColumns: ["id"],
+          },
+          {
+            foreignKeyName: "tasks_relances_assigne_a_fkey",
+            columns: ["assigne_a"],
+            isOneToOne: false,
+            referencedRelation: "profiles",
+            referencedColumns: ["id"],
+          },
+          {
+            foreignKeyName: "tasks_relances_cree_par_fkey",
+            columns: ["cree_par"],
+            isOneToOne: false,
+            referencedRelation: "profiles",
+            referencedColumns: ["id"],
+          },
+        ]
       }
 
       // ----------------------------------------------------------
@@ -845,6 +1078,44 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+
+        Relationships: [
+          {
+            foreignKeyName: "appointments_lead_id_fkey",
+            columns: ["lead_id"],
+            isOneToOne: false,
+            referencedRelation: "leads",
+            referencedColumns: ["id"],
+          },
+          {
+            foreignKeyName: "appointments_pris_par_id_fkey",
+            columns: ["pris_par_id"],
+            isOneToOne: false,
+            referencedRelation: "profiles",
+            referencedColumns: ["id"],
+          },
+          {
+            foreignKeyName: "appointments_assigne_a_id_fkey",
+            columns: ["assigne_a_id"],
+            isOneToOne: false,
+            referencedRelation: "profiles",
+            referencedColumns: ["id"],
+          },
+          {
+            foreignKeyName: "appointments_site_id_fkey",
+            columns: ["site_id"],
+            isOneToOne: false,
+            referencedRelation: "sites",
+            referencedColumns: ["id"],
+          },
+          {
+            foreignKeyName: "appointments_cree_par_fkey",
+            columns: ["cree_par"],
+            isOneToOne: false,
+            referencedRelation: "profiles",
+            referencedColumns: ["id"],
+          },
+        ]
       }
 
       // ----------------------------------------------------------
@@ -881,6 +1152,8 @@ export interface Database {
           actif?: boolean
           created_at?: string
         }
+
+        Relationships: []
       }
 
       // ----------------------------------------------------------
@@ -920,6 +1193,8 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+
+        Relationships: []
       }
 
       // ----------------------------------------------------------
@@ -956,15 +1231,283 @@ export interface Database {
           auteur_id?: string | null
           created_at?: string
         }
+
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_auteur_id_fkey",
+            columns: ["auteur_id"],
+            isOneToOne: false,
+            referencedRelation: "profiles",
+            referencedColumns: ["id"],
+          },
+        ]
+      }
+
+      // ----------------------------------------------------------
+      // message_logs
+      // ----------------------------------------------------------
+      message_logs: {
+        Row: {
+          id: string
+          lead_id: string | null
+          appointment_id: string | null
+          canal: string
+          destinataire: string
+          template_nom: string | null
+          contenu: string
+          statut: string
+          provider: string
+          provider_message_id: string | null
+          provider_data: Record<string, unknown>
+          erreur: string | null
+          envoye_par: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          lead_id?: string | null
+          appointment_id?: string | null
+          canal: string
+          destinataire: string
+          template_nom?: string | null
+          contenu: string
+          statut?: string
+          provider?: string
+          provider_message_id?: string | null
+          provider_data?: Record<string, unknown>
+          erreur?: string | null
+          envoye_par?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          lead_id?: string | null
+          appointment_id?: string | null
+          canal?: string
+          destinataire?: string
+          template_nom?: string | null
+          contenu?: string
+          statut?: string
+          provider?: string
+          provider_message_id?: string | null
+          provider_data?: Record<string, unknown>
+          erreur?: string | null
+          envoye_par?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_logs_lead_id_fkey",
+            columns: ["lead_id"],
+            isOneToOne: false,
+            referencedRelation: "leads",
+            referencedColumns: ["id"],
+          },
+        ]
+      }
+
+      // ----------------------------------------------------------
+      // telephony_events
+      // ----------------------------------------------------------
+      telephony_events: {
+        Row: {
+          id: string
+          lead_id: string | null
+          call_id: string | null
+          agent_id: string | null
+          provider: string
+          provider_call_id: string | null
+          event_type: string
+          payload: Record<string, unknown>
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          lead_id?: string | null
+          call_id?: string | null
+          agent_id?: string | null
+          provider?: string
+          provider_call_id?: string | null
+          event_type: string
+          payload?: Record<string, unknown>
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          lead_id?: string | null
+          call_id?: string | null
+          agent_id?: string | null
+          provider?: string
+          provider_call_id?: string | null
+          event_type?: string
+          payload?: Record<string, unknown>
+          created_at?: string
+        }
+        Relationships: []
+      }
+
+      // ----------------------------------------------------------
+      // integration_settings
+      // ----------------------------------------------------------
+      integration_settings: {
+        Row: {
+          cle: string
+          valeur: Record<string, unknown>
+          actif: boolean
+          updated_at: string
+        }
+        Insert: {
+          cle: string
+          valeur?: Record<string, unknown>
+          actif?: boolean
+          updated_at?: string
+        }
+        Update: {
+          cle?: string
+          valeur?: Record<string, unknown>
+          actif?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+
+      // ----------------------------------------------------------
+      // data_requests
+      // ----------------------------------------------------------
+      data_requests: {
+        Row: {
+          id: string
+          lead_id: string | null
+          type: string
+          statut: string
+          demandeur_nom: string
+          demandeur_contact: string
+          motif: string | null
+          reponse: string | null
+          traite_par: string | null
+          traite_le: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          lead_id?: string | null
+          type: string
+          statut?: string
+          demandeur_nom: string
+          demandeur_contact: string
+          motif?: string | null
+          reponse?: string | null
+          traite_par?: string | null
+          traite_le?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          lead_id?: string | null
+          type?: string
+          statut?: string
+          demandeur_nom?: string
+          demandeur_contact?: string
+          motif?: string | null
+          reponse?: string | null
+          traite_par?: string | null
+          traite_le?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
 
     Views: {
-      [_ in never]: never
+      v_leads_funnel: {
+        Row: {
+          statut: LeadStatus
+          total: number
+          trente_jours: number
+        }
+        Relationships: []
+      }
+      v_leads_daily: {
+        Row: {
+          jour: string
+          total: number
+        }
+        Relationships: []
+      }
+      v_calls_daily: {
+        Row: {
+          jour: string
+          appels: number
+          duree_moyenne: number
+          agents_actifs: number
+        }
+        Relationships: []
+      }
+      v_appointments_daily: {
+        Row: {
+          jour: string
+          total: number
+          confirmes: number
+          effectues: number
+          absents: number
+        }
+        Relationships: []
+      }
+      v_sources_performance: {
+        Row: {
+          source: string
+          leads: number
+          qualifies: number
+          rdv: number
+          gagnes: number
+          taux_rdv: number
+        }
+        Relationships: []
+      }
+      v_agent_performance: {
+        Row: {
+          id: string
+          agent: string
+          role: UserRole
+          appels: number
+          rdv_pris: number
+          leads_traites: number
+        }
+        Relationships: []
+      }
     }
 
     Functions: {
-      [_ in never]: never
+      cadence_prochaine_echeance: {
+        Args: { p_tentatives: number; p_base?: string }
+        Returns: string
+      }
+      escalader_leads_sla: {
+        Args: { p_seuil_minutes?: number }
+        Returns: number
+      }
+      generer_confirmations_j1: {
+        Args: Record<string, never>
+        Returns: number
+      }
+      get_appointment_by_token: {
+        Args: { p_token: string }
+        Returns: Record<string, unknown> | null
+      }
+      confirm_appointment_by_token: {
+        Args: { p_token: string; p_action?: string }
+        Returns: Record<string, unknown>
+      }
+      anonymiser_lead: {
+        Args: { p_lead_id: string }
+        Returns: boolean
+      }
     }
 
     Enums: {

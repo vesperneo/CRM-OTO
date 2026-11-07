@@ -20,19 +20,24 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Sources de leads
 INSERT INTO sources (id, nom, type) VALUES
-  ('s1111111-1111-1111-1111-111111111111', 'Meta Lead Ads', 'paid'),
-  ('s2222222-2222-2222-2222-222222222222', 'Site Web Otoclic', 'organic'),
-  ('s3333333-3333-3333-3333-333333333333', 'Google Ads', 'paid'),
-  ('s4444444-4444-4444-4444-444444444444', 'WhatsApp entrant', 'direct'),
-  ('s5555555-5555-5555-5555-555555555555', 'Salon Auto', 'event')
+  ('51111111-1111-4111-8111-111111111111', 'Facebook Ads',        'paid'),
+  ('52222222-2222-4222-8222-222222222222', 'Instagram Ads',       'paid'),
+  ('53333333-3333-4333-8333-333333333333', 'TikTok Ads',          'paid'),
+  ('54444444-4444-4444-8444-444444444444', 'Google Ads',          'paid'),
+  ('55555555-5555-4555-8555-555555555555', 'Formulaire site web', 'organic'),
+  ('56666666-6666-4666-8666-666666666666', 'Spontané (showroom)', 'direct'),
+  ('57777777-7777-4777-8777-777777777777', 'WhatsApp entrant',    'direct'),
+  ('58888888-8888-4888-8888-888888888888', 'Appel entrant',       'direct'),
+  ('59999999-9999-4999-8999-999999999999', 'Salon / Événement',   'event'),
+  ('5aaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Recommandation',      'referral')
 ON CONFLICT (nom) DO NOTHING;
 
 -- Tags
 INSERT INTO tags (id, nom, couleur) VALUES
-  ('t1111111-1111-1111-1111-111111111111', 'VIP', '#EF4444'),
-  ('t2222222-2222-2222-2222-222222222222', 'Financement requis', '#3B82F6'),
-  ('t3333333-3333-3333-3333-333333333333', 'Reprise véhicule', '#10B981'),
-  ('t4444444-4444-4444-4444-444444444444', 'Livraison urgente', '#F59E0B')
+  ('e1111111-1111-4111-8111-111111111111', 'VIP', '#EF4444'),
+  ('e2222222-2222-4222-8222-222222222222', 'Financement requis', '#3B82F6'),
+  ('e3333333-3333-4333-8333-333333333333', 'Reprise véhicule', '#10B981'),
+  ('e4444444-4444-4444-8444-444444444444', 'Livraison urgente', '#F59E0B')
 ON CONFLICT (nom) DO NOTHING;
 
 -- Dispositions d'appel CRC
@@ -51,7 +56,7 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Scripts d'appel
 INSERT INTO call_scripts (id, nom, produit, campagne, contenu) VALUES
-  ('sc111111-1111-1111-1111-111111111111', 'Script Standard Véhicule Neuf', 'Général', 'Toutes campagnes', '{
+  ('ac111111-1111-4111-8111-111111111111', 'Script Standard Véhicule Neuf', 'Général', 'Toutes campagnes', '{
     "accroche": "Bonjour M./Mme {{nom}}, je suis {{agent_prenom}} d''Otoclic. Vous avez manifesté votre intérêt pour notre gamme {{produit}}. Avez-vous 2 minutes pour faire le point sur votre projet ?",
     "questions_qualification": [
       "Quel est votre délai d''achat envisagé (immédiat, 1-3 mois, plus tard) ?",
@@ -65,3 +70,4 @@ INSERT INTO call_scripts (id, nom, produit, campagne, contenu) VALUES
     "closing_rdv": "Le plus simple pour vous rendre compte est de venir l''essayer directement au showroom {{site}}. Seriez-vous disponible demain en fin de matinée ou dans l''après-midi ?"
   }')
 ON CONFLICT (id) DO NOTHING;
+

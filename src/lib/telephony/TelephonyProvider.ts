@@ -114,3 +114,4 @@ export function getTelephonyProvider(): TelephonyProvider {
 
   return _instance
 }
+

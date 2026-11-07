@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Bell, ChevronDown } from 'lucide-react'
+import { Bell, ChevronDown, Menu } from 'lucide-react'
 import { getNomComplet, getInitiales } from '@/lib/utils'
 import { AGENT_STATUSES } from '@/lib/constants'
+import DemoRoleSwitcher from './DemoRoleSwitcher'
+import type { DemoRole } from '@/lib/demo-profile'
 
 interface HeaderProfile {
   id: string
@@ -18,22 +20,39 @@ interface HeaderProfile {
 
 interface HeaderProps {
   profile: HeaderProfile
+  demoMode?: boolean
+  demoRole?: DemoRole
 }
 
 const PAGE_TITLES: Record<string, string> = {
   '/dashboard': 'Tableau de bord',
+  '/admin': 'Panneau administrateur',
+  '/superviseur': 'Panneau superviseur',
+  '/agent': 'Espace agent CRC',
   '/leads': 'Gestion des leads',
   '/crc/file': "Ma file d'appels",
   '/crc/supervision': 'Supervision CRC',
-  '/rendez-vous': 'Rendez-vous & Calendrier',
+  '/rendez-vous': 'Rendez-vous & calendrier',
   '/taches': 'Mes tâches du jour',
+  '/analytics': 'Analytique & reporting',
+  '/conformite': 'Conformité CNDP',
   '/parametres': 'Paramètres',
 }
 
-export default function Header({ profile }: HeaderProps) {
+const ROLE_LABELS: Record<string, string> = {
+  admin: 'Administrateur',
+  superviseur_crc: 'Superviseur CRC',
+  agent_crc: 'Agent CRC',
+  responsable_site: 'Responsable de site',
+  commercial: 'Commercial',
+  lecture_seule: 'Lecture seule',
+}
+
+export default function Header({ profile, demoMode, demoRole }: HeaderProps) {
   const pathname = usePathname()
   const [currentStatus, setCurrentStatus] = useState<string>('hors_ligne')
   const [isStatusOpen, setIsStatusOpen] = useState(false)
+  const statusRef = useRef<HTMLDivElement>(null)
   const isCrcUser = ['agent_crc', 'superviseur_crc'].includes(profile.role)
 
   useEffect(() => {
@@ -52,6 +71,26 @@ export default function Header({ profile }: HeaderProps) {
       })
   }, [profile.id, isCrcUser])
 
+  useEffect(() => {
+    if (!isStatusOpen) return
+
+    const onPointerDown = (event: MouseEvent) => {
+      if (statusRef.current && !statusRef.current.contains(event.target as Node)) {
+        setIsStatusOpen(false)
+      }
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsStatusOpen(false)
+    }
+
+    document.addEventListener('mousedown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [isStatusOpen])
+
   async function updateStatus(newStatus: string) {
     setCurrentStatus(newStatus)
     setIsStatusOpen(false)
@@ -64,48 +103,80 @@ export default function Header({ profile }: HeaderProps) {
     })
   }
 
-  const title = Object.entries(PAGE_TITLES).find(([key]) =>
-    pathname.startsWith(key)
-  )?.[1] ?? 'Otoclic CRM'
+  function toggleMobileSidebar() {
+    window.dispatchEvent(new Event('sidebar:toggle'))
+  }
 
-  const activeStatusObj = AGENT_STATUSES.find(s => s.value === currentStatus) ?? AGENT_STATUSES[4]
+  const title =
+    Object.entries(PAGE_TITLES).find(([key]) => pathname.startsWith(key))?.[1] ??
+    'Otoclic CRM'
+
+  const activeStatusObj =
+    AGENT_STATUSES.find(s => s.value === currentStatus) ?? AGENT_STATUSES[4]
 
   return (
-    <header className="h-16 bg-white border-b border-gray-200 px-4 md:px-6 flex items-center justify-between shrink-0">
-      <div className="flex items-center gap-4">
-        <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
-        {profile.team?.nom && (
-          <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-            {profile.team.nom}
-          </span>
-        )}
+    <header className="z-30 flex h-16 shrink-0 items-center justify-between gap-4 border-b border-gray-200 bg-white/90 px-4 backdrop-blur-md md:px-6">
+      <div className="flex min-w-0 items-center gap-3">
+        <button
+          type="button"
+          onClick={toggleMobileSidebar}
+          aria-label="Ouvrir la navigation"
+          className="btn-icon -ml-1 md:hidden"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+
+        <div className="min-w-0">
+          <h1 className="truncate text-[15px] font-semibold tracking-tight text-gray-900">
+            {title}
+          </h1>
+          {profile.team?.nom && (
+            <p className="hidden truncate text-[11px] text-gray-400 sm:block">
+              {profile.team.nom}
+            </p>
+          )}
+        </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        {/* Statut Agent CRC dropdown */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Statut Agent CRC */}
         {isCrcUser && (
-          <div className="relative">
+          <div className="relative" ref={statusRef}>
             <button
-              onClick={() => setIsStatusOpen(!isStatusOpen)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-gray-200 text-xs font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors"
+              type="button"
+              onClick={() => setIsStatusOpen(open => !open)}
+              aria-haspopup="menu"
+              aria-expanded={isStatusOpen}
+              className="flex h-9 items-center gap-2 rounded-full border border-gray-200 bg-white px-3 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
             >
-              <span className={`w-2 h-2 rounded-full ${activeStatusObj.color}`} />
-              <span>{activeStatusObj.label}</span>
-              <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+              <span className={`h-2 w-2 rounded-full ${activeStatusObj.color}`} />
+              <span className="hidden sm:inline">{activeStatusObj.label}</span>
+              <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
             </button>
 
             {isStatusOpen && (
-              <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-                <div className="px-3 py-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+              <div
+                role="menu"
+                aria-label="Changer de statut"
+                className="absolute right-0 z-50 mt-2 w-52 rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl"
+              >
+                <p className="px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
                   Changer de statut
-                </div>
+                </p>
                 {AGENT_STATUSES.map(status => (
                   <button
                     key={status.value}
+                    type="button"
+                    role="menuitem"
                     onClick={() => updateStatus(status.value)}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                    className={[
+                      'flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] transition-colors',
+                      status.value === currentStatus
+                        ? 'bg-brand-50 font-medium text-brand-700'
+                        : 'text-gray-700 hover:bg-gray-50',
+                    ].join(' ')}
                   >
-                    <span className={`w-2 h-2 rounded-full ${status.color}`} />
+                    <span className={`h-2 w-2 rounded-full ${status.color}`} />
                     <span>{status.label}</span>
                   </button>
                 ))}
@@ -114,22 +185,32 @@ export default function Header({ profile }: HeaderProps) {
           </div>
         )}
 
+        {/* Bascule de rôle (mode démo uniquement) */}
+        {demoMode && demoRole && <DemoRoleSwitcher currentRole={demoRole} />}
+
         {/* Notifications */}
-        <button className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors">
-          <Bell className="w-5 h-5" />
+        <button
+          type="button"
+          aria-label="Notifications"
+          className="btn-icon relative"
+        >
+          <Bell className="h-5 w-5" />
+          <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-brand-600 ring-2 ring-white" />
         </button>
 
-        {/* Profil compact */}
-        <div className="flex items-center gap-2 pl-2 border-l border-gray-200">
-          <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-semibold">
+        <div className="mx-1 hidden h-6 w-px bg-gray-200 sm:block" />
+
+        {/* Profil */}
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white shadow-sm">
             {getInitiales(profile)}
           </div>
-          <div className="hidden md:block text-left">
-            <p className="text-xs font-medium text-gray-900 leading-none">
+          <div className="hidden text-left md:block">
+            <p className="text-[13px] font-semibold leading-tight text-gray-900">
               {getNomComplet(profile)}
             </p>
-            <p className="text-[11px] text-gray-500 capitalize mt-0.5">
-              {profile.role.replace(/_/g, ' ')}
+            <p className="text-[11px] leading-tight text-gray-400">
+              {ROLE_LABELS[profile.role] ?? profile.role}
             </p>
           </div>
         </div>

@@ -1,163 +1,137 @@
-import { Phone, CheckCircle, Clock, Calendar, MessageSquare, Play, ShieldAlert } from 'lucide-react'
-import { formatTelephone, formatMontant } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/server'
+import { fetchNextLeadForAgent } from '@/features/calls/actions'
+import { isSupabaseConfigured } from '@/lib/utils'
+import CallQueueView, {
+  type Disposition,
+  type QueueLead,
+  type ScriptContent,
+} from '@/components/crc/CallQueueView'
 
-export default function CallQueuePage() {
-  const currentLead = {
-    id: 'lead-queue-1',
+const DEMO_DISPOSITIONS: Disposition[] = [
+  { id: 'd1111111-1111-1111-1111-111111111111', libelle: 'Répondu – Intéressé', type: 'repond_interesse', action: 'creer_relance', action_params: { nouveau_statut: 'en_qualification_crc' }, couleur: '#10B981', ordre: 1 },
+  { id: 'd2222222-2222-2222-2222-222222222222', libelle: 'Répondu – À rappeler', type: 'repond_rappeler', action: 'creer_relance', action_params: { nouveau_statut: 'a_rappeler' }, couleur: '#F59E0B', ordre: 2 },
+  { id: 'd3333333-3333-3333-3333-333333333333', libelle: 'Répondu – Pas intéressé', type: 'repond_pas_interesse', action: 'changer_statut', action_params: { nouveau_statut: 'perdu' }, couleur: '#EF4444', ordre: 3 },
+  { id: 'd4444444-4444-4444-4444-444444444444', libelle: 'Pas de réponse', type: 'pas_reponse', action: 'creer_relance', action_params: { cadence_auto: true }, couleur: '#6B7280', ordre: 4 },
+  { id: 'd5555555-5555-5555-5555-555555555555', libelle: 'Messagerie', type: 'messagerie', action: 'creer_relance', action_params: { cadence_auto: true, envoyer_whatsapp: true }, couleur: '#6B7280', ordre: 5 },
+  { id: 'd6666666-6666-6666-6666-666666666666', libelle: 'Occupé', type: 'occupe', action: 'creer_relance', action_params: { delai_relance_heures: 1 }, couleur: '#6B7280', ordre: 6 },
+  { id: 'd7777777-7777-7777-7777-777777777777', libelle: 'Numéro erroné / Hors service', type: 'numero_errone', action: 'envoyer_whatsapp', action_params: { template: 'correction_numero' }, couleur: '#DC2626', ordre: 7 },
+  { id: 'd8888888-8888-8888-8888-888888888888', libelle: 'RDV pris', type: 'rdv_pris', action: 'creer_rdv', action_params: { nouveau_statut: 'rdv_planifie' }, couleur: '#da3655', ordre: 8 },
+  { id: 'd9999999-9999-9999-9999-999999999999', libelle: 'Doublon', type: 'doublon', action: 'changer_statut', action_params: { nouveau_statut: 'doublon' }, couleur: '#8B5CF6', ordre: 9 },
+  { id: 'daaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', libelle: 'Ne pas rappeler (DNC)', type: 'dnc', action: 'marquer_dnc', action_params: { nouveau_statut: 'ne_pas_rappeler' }, couleur: '#111827', ordre: 10 },
+]
+
+const DEMO_SCRIPT: ScriptContent = {
+  accroche:
+    "Bonjour M./Mme {{nom}}, je suis votre conseiller d'Otoclic. Vous avez manifesté votre intérêt pour {{produit}}. Avez-vous 2 minutes pour faire le point sur votre projet ?",
+  questions_qualification: [
+    "Quel est votre délai d'achat envisagé (immédiat, 1-3 mois, plus tard) ?",
+    'Avez-vous un véhicule actuel à faire reprendre par notre showroom ?',
+    'Envisagez-vous un financement à crédit / LOA ou un achat comptant ?',
+  ],
+  objections: [
+    {
+      objection: 'Je voulais juste voir le prix',
+      reponse:
+        'Je comprends tout à fait. Nos offres actuelles incluent des remises spéciales et des formules de reprise avantageuses. Quel modèle précis retenait votre attention ?',
+    },
+    {
+      objection: "Je n'ai pas le temps",
+      reponse:
+        'Aucun souci, je peux vous envoyer la fiche par WhatsApp ou vous rappeler à un moment plus propice. Quel créneau vous conviendrait ?',
+    },
+  ],
+  closing_rdv:
+    'Le plus simple pour vous rendre compte est de venir l’essayer directement au showroom {{site}}. Seriez-vous disponible demain en fin de matinée ou dans l’après-midi ?',
+}
+
+const DEMO_QUEUE: QueueLead[] = [
+  {
+    id: 'demo-queue-1',
     nom: 'Benjelloun',
     prenom: 'Omar',
     telephone: '+212661889900',
     statut: 'nouveau',
-    source: 'Meta Lead Ads (Campagne Salon Auto)',
+    ville: 'Casablanca',
     interet_produit: 'SUV Hybride 2025',
     budget: 320000,
+    nb_tentatives_appel: 0,
+    created_at: new Date(Date.now() - 8 * 60 * 1000).toISOString(),
+    source: { nom: 'Meta Lead Ads' },
+    site_prefere: { nom: 'Showroom Casa Centre', ville: 'Casablanca' },
+    __demo: true,
+  },
+  {
+    id: 'demo-queue-2',
+    nom: 'El Amrani',
+    prenom: 'Fatima',
+    telephone: '+212662987654',
+    statut: 'nouveau',
+    ville: 'Rabat',
+    interet_produit: 'Berline Compacte',
+    budget: 350000,
+    nb_tentatives_appel: 0,
+    created_at: new Date(Date.now() - 24 * 60 * 1000).toISOString(),
+    source: { nom: 'Site Web Otoclic' },
+    site_prefere: { nom: 'Showroom Rabat Agdal', ville: 'Rabat' },
+    __demo: true,
+  },
+  {
+    id: 'demo-queue-3',
+    nom: 'Tazi',
+    prenom: 'Mehdi',
+    telephone: '+212663112233',
+    statut: 'a_rappeler',
     ville: 'Casablanca',
-    site_prefere: 'Showroom Casa Centre',
-    nb_tentatives: 0,
-    delai_ecoule: '8 minutes',
+    interet_produit: 'Électrique',
+    budget: 420000,
+    nb_tentatives_appel: 2,
+    created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+    source: { nom: 'Google Ads' },
+    site_prefere: { nom: 'Showroom Casa Centre', ville: 'Casablanca' },
+    __demo: true,
+  },
+]
+
+export default async function CallQueuePage() {
+  let dispositions = DEMO_DISPOSITIONS
+  let script = DEMO_SCRIPT
+  let lead: QueueLead | null = DEMO_QUEUE[0]
+  let reason = 'File de démonstration CRC'
+
+  if (isSupabaseConfigured()) {
+    const supabase = await createClient()
+
+    const [{ data: dispositionsData }, { data: scriptsData }] = await Promise.all([
+      supabase.from('call_dispositions').select('*').eq('actif', true).order('ordre', { ascending: true }),
+      supabase.from('call_scripts').select('*').eq('actif', true).limit(1),
+    ])
+
+    if (dispositionsData && dispositionsData.length > 0) {
+      dispositions = dispositionsData as Disposition[]
+    }
+
+    const contenu = scriptsData?.[0]?.contenu as Record<string, unknown> | undefined
+    if (contenu) {
+      script = contenu as unknown as ScriptContent
+    }
+
+    try {
+      const next = await fetchNextLeadForAgent()
+      lead = (next.lead as QueueLead | null) ?? null
+      reason = next.reason
+    } catch {
+      lead = null
+      reason = 'Impossible de charger la file d’appels'
+    }
   }
 
   return (
-    <div className="space-y-6">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">Ma file d'appels CRC</h2>
-          <p className="text-sm text-gray-500">Mode automatique : priorité Nouveaux leads &gt; Rappels programmés &gt; Relances</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
-            ● Agent en ligne (Prêt pour appel)
-          </span>
-        </div>
-      </div>
-
-      {/* Écran d'appel en cours (1 seul écran optimisé CRC) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Colonne gauche : Infos prospect + Téléphonie */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
-          <div className="border-b border-gray-100 pb-4">
-            <span className="inline-block px-2.5 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800 uppercase tracking-wider mb-2">
-              Lead verrouillé pour vous (30 min)
-            </span>
-            <h3 className="text-xl font-bold text-gray-900">
-              {currentLead.prenom} {currentLead.nom}
-            </h3>
-            <p className="text-xs text-gray-500 mt-0.5">En attente depuis {currentLead.delai_ecoule} • {currentLead.source}</p>
-          </div>
-
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between py-1 border-b border-gray-50">
-              <span className="text-gray-500">Téléphone</span>
-              <span className="font-mono font-medium text-gray-900">{formatTelephone(currentLead.telephone)}</span>
-            </div>
-            <div className="flex justify-between py-1 border-b border-gray-50">
-              <span className="text-gray-500">Intérêt produit</span>
-              <span className="font-medium text-gray-900">{currentLead.interet_produit}</span>
-            </div>
-            <div className="flex justify-between py-1 border-b border-gray-50">
-              <span className="text-gray-500">Budget envisagé</span>
-              <span className="font-medium text-gray-900">{formatMontant(currentLead.budget)}</span>
-            </div>
-            <div className="flex justify-between py-1 border-b border-gray-50">
-              <span className="text-gray-500">Ville / Site</span>
-              <span className="font-medium text-gray-900">{currentLead.ville} ({currentLead.site_prefere})</span>
-            </div>
-          </div>
-
-          {/* Action principale : Click-to-call */}
-          <div className="pt-2">
-            <a
-              href={`tel:${currentLead.telephone}`}
-              className="w-full flex items-center justify-center gap-2 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-md transition-colors text-base"
-            >
-              <Phone className="w-5 h-5 animate-pulse" />
-              Appeler ({formatTelephone(currentLead.telephone)})
-            </a>
-            <p className="text-center text-xs text-gray-400 mt-2">
-              Chronomètre d'appel démarré automatiquement au clic
-            </p>
-          </div>
-        </div>
-
-        {/* Colonne centrale : Script d'appel dynamique + Qualification */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
-          <div className="border-b border-gray-100 pb-3 flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900">Script de qualification dynamique</h3>
-            <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Campagne 2025</span>
-          </div>
-
-          {/* Script questions */}
-          <div className="space-y-4 text-xs">
-            <div className="p-3 bg-blue-50/70 rounded-lg border border-blue-100">
-              <p className="font-semibold text-blue-950">Accroche conseillée :</p>
-              <p className="text-blue-900 mt-1 italic">
-                "Bonjour M. Benjelloun, je suis de l'équipe Otoclic. Vous avez fait une demande concernant le SUV Hybride. Avez-vous 2 minutes pour faire le point sur vos critères ?"
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <label className="block font-medium text-gray-700">Délai d'achat prévu :</label>
-              <div className="grid grid-cols-2 gap-2">
-                <button type="button" className="p-2 border border-gray-200 rounded text-left hover:bg-gray-50 focus:border-blue-500 focus:bg-blue-50">Immédiat (&lt; 1 mois)</button>
-                <button type="button" className="p-2 border border-gray-200 rounded text-left hover:bg-gray-50 focus:border-blue-500 focus:bg-blue-50">1 à 3 mois</button>
-              </div>
-
-              <label className="block font-medium text-gray-700 pt-2">Projet de reprise véhicule actuel ?</label>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-1.5"><input type="radio" name="reprise" /> Oui</label>
-                <label className="flex items-center gap-1.5"><input type="radio" name="reprise" /> Non</label>
-              </div>
-
-              <label className="block font-medium text-gray-700 pt-2">Option de financement souhaitée ?</label>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-1.5"><input type="radio" name="financement" /> Crédit / LOA</label>
-                <label className="flex items-center gap-1.5"><input type="radio" name="financement" /> Comptant</label>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Colonne droite : Fin d'appel obligatoire (Disposition) + Prise de RDV */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
-          <div className="border-b border-gray-100 pb-3">
-            <h3 className="font-semibold text-gray-900">Issue de l'appel (Obligatoire)</h3>
-            <p className="text-xs text-gray-400 mt-0.5">Choisir une disposition pour déverrouiller le lead suivant</p>
-          </div>
-
-          <div className="space-y-2">
-            <button className="w-full text-left p-3 rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-900 font-medium text-xs flex items-center justify-between">
-              <span>📅 Rendez-vous pris en showroom</span>
-              <CheckCircle className="w-4 h-4 text-blue-600" />
-            </button>
-            <button className="w-full text-left p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-800 text-xs">
-              📞 Répondu — À rappeler plus tard
-            </button>
-            <button className="w-full text-left p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-800 text-xs">
-              📵 Pas de réponse (Enclencher cadence J0+3h)
-            </button>
-            <button className="w-full text-left p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-800 text-xs">
-              💬 Messagerie / Occupé
-            </button>
-            <button className="w-full text-left p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-800 text-xs text-red-700">
-              ❌ Pas intéressé / Ne pas rappeler
-            </button>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Notes d'appel :</label>
-            <textarea
-              rows={3}
-              className="w-full p-2.5 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              placeholder="Préciser les attentes du client, modèle spécifique, contraintes d'horaires..."
-            />
-          </div>
-
-          <button className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded-lg transition-colors">
-            Enregistrer & Passer au lead suivant →
-          </button>
-        </div>
-      </div>
-    </div>
+    <CallQueueView
+      initialLead={lead}
+      initialReason={reason}
+      dispositions={dispositions}
+      script={script}
+      demoQueue={DEMO_QUEUE}
+    />
   )
 }

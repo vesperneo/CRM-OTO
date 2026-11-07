@@ -9,10 +9,26 @@ export const APP_CURRENCY = 'MAD'
 export const APP_PHONE_PREFIX = '+212'
 
 // ============================================================
+// SOURCES DE LEADS (référentiel par défaut / mode démo)
+// ============================================================
+export const LEAD_SOURCES = [
+  { id: '51111111-1111-4111-8111-111111111111', nom: 'Facebook Ads',         type: 'paid' },
+  { id: '52222222-2222-4222-8222-222222222222', nom: 'Instagram Ads',        type: 'paid' },
+  { id: '53333333-3333-4333-8333-333333333333', nom: 'TikTok Ads',           type: 'paid' },
+  { id: '54444444-4444-4444-8444-444444444444', nom: 'Google Ads',           type: 'paid' },
+  { id: '55555555-5555-4555-8555-555555555555', nom: 'Formulaire site web',  type: 'organic' },
+  { id: '56666666-6666-4666-8666-666666666666', nom: 'Spontané (showroom)',  type: 'direct' },
+  { id: '57777777-7777-4777-8777-777777777777', nom: 'WhatsApp entrant',     type: 'direct' },
+  { id: '58888888-8888-4888-8888-888888888888', nom: 'Appel entrant',        type: 'direct' },
+  { id: '59999999-9999-4999-8999-999999999999', nom: 'Salon / Événement',    type: 'event' },
+  { id: '5aaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', nom: 'Recommandation',       type: 'referral' },
+]
+
+// ============================================================
 // PIPELINE STATUTS
 // ============================================================
 export const LEAD_STATUSES = [
-  { value: 'nouveau',              label: 'Nouveau',              color: '#3B82F6', bgColor: 'bg-blue-100',   textColor: 'text-blue-800',   icon: '🆕' },
+  { value: 'nouveau',              label: 'Nouveau',              color: '#da3655', bgColor: 'bg-brand-100',   textColor: 'text-brand-800',   icon: '🆕' },
   { value: 'en_qualification_crc', label: 'En qualification CRC', color: '#8B5CF6', bgColor: 'bg-purple-100', textColor: 'text-purple-800',  icon: '📞' },
   { value: 'qualifie',             label: 'Qualifié',             color: '#06B6D4', bgColor: 'bg-cyan-100',   textColor: 'text-cyan-800',    icon: '✅' },
   { value: 'rdv_planifie',         label: 'RDV planifié',         color: '#F59E0B', bgColor: 'bg-amber-100',  textColor: 'text-amber-800',   icon: '📅' },
@@ -57,7 +73,7 @@ export const AGENT_STATUSES = [
   { value: 'disponible',   label: 'Disponible',    color: 'bg-green-500',  dotColor: 'text-green-500' },
   { value: 'en_appel',     label: 'En appel',      color: 'bg-red-500',    dotColor: 'text-red-500' },
   { value: 'pause',        label: 'En pause',      color: 'bg-yellow-500', dotColor: 'text-yellow-500' },
-  { value: 'en_formation', label: 'En formation',  color: 'bg-blue-500',   dotColor: 'text-blue-500' },
+  { value: 'en_formation', label: 'En formation',  color: 'bg-brand-500',   dotColor: 'text-brand-500' },
   { value: 'hors_ligne',   label: 'Hors ligne',    color: 'bg-gray-400',   dotColor: 'text-gray-400' },
 ] as const
 
@@ -65,7 +81,7 @@ export const AGENT_STATUSES = [
 // TYPES DE TÂCHES
 // ============================================================
 export const TASK_TYPES = [
-  { value: 'rappel_appel',    label: 'Rappel téléphonique', icon: '📞', color: 'text-blue-600' },
+  { value: 'rappel_appel',    label: 'Rappel téléphonique', icon: '📞', color: 'text-brand-600' },
   { value: 'whatsapp',        label: 'WhatsApp',            icon: '💬', color: 'text-green-600' },
   { value: 'email',           label: 'Email',               icon: '📧', color: 'text-purple-600' },
   { value: 'confirmation_rdv',label: 'Confirmation RDV',    icon: '✅', color: 'text-orange-600' },
@@ -83,7 +99,7 @@ export const APPOINTMENT_TYPES = [
 ] as const
 
 export const APPOINTMENT_STATUSES = [
-  { value: 'planifie',   label: 'Planifié',   color: 'bg-blue-100 text-blue-800' },
+  { value: 'planifie',   label: 'Planifié',   color: 'bg-brand-100 text-brand-800' },
   { value: 'confirme',   label: 'Confirmé',   color: 'bg-green-100 text-green-800' },
   { value: 'effectue',   label: 'Effectué',   color: 'bg-emerald-100 text-emerald-800' },
   { value: 'absent',     label: 'Absent',     color: 'bg-red-100 text-red-800' },
@@ -95,7 +111,7 @@ export const APPOINTMENT_STATUSES = [
 // TYPES D'ACTIVITÉS
 // ============================================================
 export const ACTIVITY_TYPES = [
-  { value: 'appel',            label: 'Appel',                icon: '📞', color: 'text-blue-600' },
+  { value: 'appel',            label: 'Appel',                icon: '📞', color: 'text-brand-600' },
   { value: 'whatsapp',         label: 'WhatsApp',             icon: '💬', color: 'text-green-600' },
   { value: 'email',            label: 'Email',                icon: '📧', color: 'text-purple-600' },
   { value: 'note',             label: 'Note',                 icon: '📝', color: 'text-gray-600' },
@@ -165,9 +181,22 @@ export const NAV_ITEMS = [
     roles: ['admin', 'superviseur_crc', 'agent_crc', 'responsable_site', 'commercial'],
   },
   {
+    label: 'Analytique',
+    href: '/analytics',
+    icon: 'BarChart3',
+    roles: ['admin', 'superviseur_crc', 'responsable_site'],
+  },
+  {
+    label: 'Conformité CNDP',
+    href: '/conformite',
+    icon: 'ShieldCheck',
+    roles: ['admin', 'superviseur_crc'],
+  },
+  {
     label: 'Paramètres',
     href: '/parametres',
     icon: 'Settings',
     roles: ['admin'],
   },
 ] as const
+

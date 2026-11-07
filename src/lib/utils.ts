@@ -8,6 +8,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function isSupabaseConfigured(): boolean {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  )
+}
+
 export function formatDate(dateStr: string | Date | null | undefined, fmt = 'dd/MM/yyyy'): string {
   if (!dateStr) return '—'
   try {
@@ -145,3 +151,4 @@ export function formatDureeAppel(secondes: number | null | undefined): string {
   const s = secondes % 60
   return `${m}:${s.toString().padStart(2, '0')}`
 }
+

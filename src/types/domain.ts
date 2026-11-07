@@ -93,3 +93,4 @@ export type LeadFilters = {
   sort?: string
   order?: 'asc' | 'desc'
 }
+

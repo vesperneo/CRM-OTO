@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { AlertCircle, Eye, EyeOff } from 'lucide-react'
 
 interface LoginFormProps {
   redirectTo?: string
@@ -11,6 +12,7 @@ interface LoginFormProps {
 export default function LoginForm({ redirectTo }: LoginFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
@@ -37,10 +39,10 @@ export default function LoginForm({ redirectTo }: LoginFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-          Email
+        <label htmlFor="email" className="label">
+          Email professionnel
         </label>
         <input
           id="email"
@@ -49,46 +51,63 @@ export default function LoginForm({ redirectTo }: LoginFormProps) {
           onChange={e => setEmail(e.target.value)}
           required
           autoComplete="email"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
-                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                     placeholder-gray-400 transition-colors"
+          aria-describedby={error ? 'login-error' : undefined}
+          className="input h-11"
           placeholder="agent@otoclic.ma"
         />
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="password" className="label">
           Mot de passe
         </label>
-        <input
-          id="password"
-          type="password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-          autoComplete="current-password"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
-                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                     placeholder-gray-400 transition-colors"
-          placeholder="••••••••"
-        />
+        <div className="relative">
+          <input
+            id="password"
+            type={showPassword ? 'text' : 'password'}
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+            aria-describedby={error ? 'login-error' : undefined}
+            className="input h-11 pr-11"
+            placeholder="••••••••"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(value => !value)}
+            aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+            className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
+          </button>
+        </div>
       </div>
 
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 p-2 rounded-lg">{error}</p>
+        <div
+          id="login-error"
+          role="alert"
+          aria-live="polite"
+          className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{error}</span>
+        </div>
       )}
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400
-                   text-white font-medium py-2.5 px-4 rounded-lg text-sm
-                   transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500
-                   focus:ring-offset-2 flex items-center justify-center gap-2"
+        className="btn-primary h-11 w-full"
       >
         {loading ? (
           <>
-            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+            <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
