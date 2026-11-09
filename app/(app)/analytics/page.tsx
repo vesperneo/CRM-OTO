@@ -42,65 +42,6 @@ function alignDaily<T extends { jour: string }>(
   return keys.map((jour) => make(jour, map.get(jour)))
 }
 
-function demoData() {
-  const keys = dayKeys()
-  const dailyLeads: DailyLeadsRow[] = keys.map((jour, i) => ({
-    jour,
-    total: 8 + Math.round(6 * Math.abs(Math.sin(i / 5))) + (i % 7 === 0 ? 5 : 0),
-  }))
-  const dailyCalls: DailyCallsRow[] = keys.map((jour, i) => ({
-    jour,
-    appels: 20 + Math.round(14 * Math.abs(Math.cos(i / 6))) + (i % 5 === 0 ? 8 : 0),
-    duree_moyenne: 130 + Math.round(40 * Math.abs(Math.sin(i / 8))),
-    agents_actifs: 3 + (i % 3),
-  }))
-  const dailyAppointments: DailyAppointmentsRow[] = keys.map((jour, i) => {
-    const total = 3 + Math.round(4 * Math.abs(Math.sin(i / 4)))
-    const absents = i % 6 === 0 ? 1 : 0
-    const effectues = Math.max(0, total - absents - (i % 4 === 0 ? 1 : 0))
-    return {
-      jour,
-      total,
-      confirmes: Math.max(0, total - absents - 1),
-      effectues,
-      absents,
-    }
-  })
-
-  const funnel: FunnelRow[] = [
-    { statut: 'nouveau', total: 124, trente_jours: 45 },
-    { statut: 'en_qualification_crc', total: 98, trente_jours: 38 },
-    { statut: 'qualifie', total: 72, trente_jours: 27 },
-    { statut: 'rdv_planifie', total: 51, trente_jours: 19 },
-    { statut: 'rdv_confirme', total: 38, trente_jours: 15 },
-    { statut: 'rdv_effectue', total: 29, trente_jours: 12 },
-    { statut: 'proposition', total: 17, trente_jours: 8 },
-    { statut: 'gagne', total: 11, trente_jours: 5 },
-    { statut: 'perdu', total: 23, trente_jours: 9 },
-    { statut: 'injoignable', total: 19, trente_jours: 7 },
-    { statut: 'a_rappeler', total: 14, trente_jours: 5 },
-  ]
-
-  const sources: SourceRow[] = [
-    { source: 'Meta Lead Ads', leads: 186, qualifies: 92, rdv: 54, gagnes: 9, taux_rdv: 29 },
-    { source: 'Google Ads', leads: 124, qualifies: 61, rdv: 33, gagnes: 6, taux_rdv: 26.6 },
-    { source: 'Site web', leads: 78, qualifies: 44, rdv: 27, gagnes: 4, taux_rdv: 34.6 },
-    { source: 'WhatsApp entrant', leads: 45, qualifies: 30, rdv: 18, gagnes: 3, taux_rdv: 40 },
-    { source: 'Appel entrant', leads: 32, qualifies: 21, rdv: 12, gagnes: 2, taux_rdv: 37.5 },
-  ]
-
-  const agents: AgentPerfRow[] = [
-    { id: 'a1', agent: 'Sara Mansouri', appels: 412, rdv_pris: 61, leads_traites: 188 },
-    { id: 'a2', agent: 'Karim Alami', appels: 356, rdv_pris: 47, leads_traites: 164 },
-    { id: 'a3', agent: 'Yassine Berrada', appels: 298, rdv_pris: 33, leads_traites: 141 },
-    { id: 'a4', agent: 'Hind El Fassi', appels: 201, rdv_pris: 19, leads_traites: 96 },
-  ]
-
-  const totals: AnalyticsTotals = { caGenere: 4_250_000, escalades: 6 }
-
-  return { dailyLeads, dailyCalls, dailyAppointments, funnel, sources, agents, totals }
-}
-
 export default async function AnalyticsPage() {
   let dailyLeads: DailyLeadsRow[] = []
   let dailyCalls: DailyCallsRow[] = []
@@ -196,13 +137,6 @@ export default async function AnalyticsPage() {
     } catch {
       dailyLeads = []
     }
-  }
-
-  const useDemo = funnel.length === 0
-
-  if (useDemo) {
-    const demo = demoData()
-    return <AnalyticsView {...demo} />
   }
 
   return (

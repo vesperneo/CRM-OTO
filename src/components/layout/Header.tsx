@@ -6,9 +6,6 @@ import { createClient } from '@/lib/supabase/client'
 import { Bell, ChevronDown, Menu } from 'lucide-react'
 import { getNomComplet, getInitiales } from '@/lib/utils'
 import { AGENT_STATUSES } from '@/lib/constants'
-import DemoRoleSwitcher from './DemoRoleSwitcher'
-import type { DemoRole } from '@/lib/demo-profile'
-
 interface HeaderProfile {
   id: string
   nom: string
@@ -20,8 +17,6 @@ interface HeaderProfile {
 
 interface HeaderProps {
   profile: HeaderProfile
-  demoMode?: boolean
-  demoRole?: DemoRole
 }
 
 const PAGE_TITLES: Record<string, string> = {
@@ -48,7 +43,7 @@ const ROLE_LABELS: Record<string, string> = {
   lecture_seule: 'Lecture seule',
 }
 
-export default function Header({ profile, demoMode, demoRole }: HeaderProps) {
+export default function Header({ profile }: HeaderProps) {
   const pathname = usePathname()
   const [currentStatus, setCurrentStatus] = useState<string>('hors_ligne')
   const [isStatusOpen, setIsStatusOpen] = useState(false)
@@ -184,9 +179,6 @@ export default function Header({ profile, demoMode, demoRole }: HeaderProps) {
             )}
           </div>
         )}
-
-        {/* Bascule de rôle (mode démo uniquement) */}
-        {demoMode && demoRole && <DemoRoleSwitcher currentRole={demoRole} />}
 
         {/* Notifications */}
         <button

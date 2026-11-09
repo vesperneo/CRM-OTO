@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfile } from '@/lib/auth/profile'
-import { getRoleHome } from '@/lib/demo-profile'
+import { getRoleHome } from '@/lib/auth/profile'
 import { AGENT_STATUSES } from '@/lib/constants'
 import { computeLeadSla, formatMinutes } from '@/lib/sla'
 
@@ -37,48 +37,31 @@ interface SlaAlert {
   level: string
 }
 
-const DEMO_AGENTS: AgentSnapshot[] = [
-  { id: 'demo-agent-1', nom: 'Berrada', prenom: 'Yassine', statut: 'en_appel', appelsJour: 28, charge: 12 },
-  { id: 'demo-agent-2', nom: 'Bennis', prenom: 'Amina', statut: 'disponible', appelsJour: 34, charge: 9 },
-  { id: 'demo-agent-3', nom: 'Chraibi', prenom: 'Omar', statut: 'pause', appelsJour: 19, charge: 17 },
-  { id: 'demo-agent-4', nom: 'Lahlou', prenom: 'Mehdi', statut: 'en_formation', appelsJour: 6, charge: 5 },
-  { id: 'demo-agent-5', nom: 'El Fassi', prenom: 'Hind', statut: 'hors_ligne', appelsJour: 0, charge: 0 },
-]
-
-const DEMO_ALERTS: SlaAlert[] = [
-  { id: 'demo-sla-1', nom: 'Bennani', prenom: 'Youssef', telephone: '+212661234567', minutes: 82, level: 'depasse' },
-  { id: 'demo-sla-2', nom: 'El Amrani', prenom: 'Fatima', telephone: '+212662987654', minutes: 47, level: 'attention' },
-  { id: 'demo-sla-3', nom: 'Tazi', prenom: 'Mehdi', telephone: '+212663112233', minutes: 31, level: 'attention' },
-]
-
-const DEMO_METRICS = {
-  agentsEnLigne: 4,
-  totalAgents: 5,
-  appelsJour: 87,
-  rdvConfirmes: 12,
-  slaDepasses: 1,
-  tachesEnRetard: 6,
-}
-
 function statusConfig(status: string) {
   return AGENT_STATUSES.find((s) => s.value === status) ?? AGENT_STATUSES[4]
 }
 
 export default async function SupervisorPage() {
-  const { profile, isDemo } = await getCurrentProfile()
+  const { profile } = await getCurrentProfile()
 
   if (!profile) redirect('/login')
   if (profile.role !== 'admin' && profile.role !== 'superviseur_crc') {
     redirect(getRoleHome(profile.role))
   }
 
-  let agents = DEMO_AGENTS
-  let alerts = DEMO_ALERTS
-  let metrics = DEMO_METRICS
+  let agents: AgentSnapshot[] = []
+  let alerts: SlaAlert[] = []
+  let metrics = {
+    agentsEnLigne: 0,
+    totalAgents: 0,
+    appelsJour: 0,
+    rdvConfirmes: 0,
+    slaDepasses: 0,
+    tachesEnRetard: 0,
+  }
 
-  if (!isDemo) {
-    const supabase = await createClient()
-    const startOfToday = new Date()
+  const supabase = await createClient()
+  const startOfToday = new Date()
     startOfToday.setHours(0, 0, 0, 0)
     const endOfToday = new Date(startOfToday)
     endOfToday.setDate(endOfToday.getDate() + 1)
@@ -167,7 +150,6 @@ export default async function SupervisorPage() {
       agents = []
       alerts = []
     }
-  }
 
   const kpis = [
     {
@@ -222,13 +204,6 @@ export default async function SupervisorPage() {
           Supervision temps réel
         </Link>
       </div>
-
-      {isDemo && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800 flex items-center gap-2">
-          <Activity className="w-4 h-4 shrink-0" />
-          Mode démonstration — utilisez le sélecteur de rôle pour passer en agent ou admin.
-        </div>
-      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {kpis.map((kpi) => {

@@ -267,29 +267,23 @@ export async function deleteLead(leadId: string) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const isDemo =
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
-
-  if (!user && !isDemo) {
+  if (!user) {
     return { success: false, error: 'Non authentifié.' }
   }
 
-  if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
 
-    const canDelete =
-      profile?.role === 'admin' || profile?.role === 'superviseur_crc'
+  const canDelete =
+    profile?.role === 'admin' || profile?.role === 'superviseur_crc'
 
-    if (!canDelete && !isDemo) {
-      return {
-        success: false,
-        error: 'Privilèges insuffisants. Seul un administrateur peut supprimer un lead.',
-      }
+  if (!canDelete) {
+    return {
+      success: false,
+      error: 'Privilèges insuffisants. Seul un administrateur peut supprimer un lead.',
     }
   }
 

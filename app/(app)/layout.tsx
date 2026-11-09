@@ -8,7 +8,7 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { profile, isDemo, demoRole } = await getCurrentProfile()
+  const { profile } = await getCurrentProfile()
 
   if (!profile) {
     redirect('/login')
@@ -28,11 +28,7 @@ export default async function AppLayout({
       <Sidebar profile={profile} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <Header
-          profile={profile}
-          demoMode={isDemo}
-          demoRole={demoRole ?? undefined}
-        />
+        <Header profile={profile} />
 
         <main
           id="main-content"

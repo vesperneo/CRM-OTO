@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfile } from '@/lib/auth/profile'
-import { getRoleHome } from '@/lib/demo-profile'
+import { getRoleHome } from '@/lib/auth/profile'
 import AdminView from '@/components/admin/AdminView'
 import type {
   AdminAuditEntry,
@@ -11,216 +11,11 @@ import type {
   AdminUser,
 } from '@/components/admin/types'
 
-function minutesAgo(minutes: number): string {
-  return new Date(Date.now() - minutes * 60_000).toISOString()
-}
-
-const DEMO_USERS: AdminUser[] = [
-  {
-    id: '00000000-0000-0000-0000-000000000001',
-    nom: 'Alami',
-    prenom: 'Karim',
-    email: 'karim.alami@otoclic.ma',
-    role: 'admin',
-    team_id: 'demo-team-0',
-    team_nom: 'Direction Otoclic',
-    telephone: '+212661000001',
-    actif: true,
-    created_at: minutesAgo(60 * 24 * 210),
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000002',
-    nom: 'Mansouri',
-    prenom: 'Sara',
-    email: 'sara.mansouri@otoclic.ma',
-    role: 'superviseur_crc',
-    team_id: 'demo-team-1',
-    team_nom: 'CRC Central Casablanca',
-    telephone: '+212661000002',
-    actif: true,
-    created_at: minutesAgo(60 * 24 * 180),
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000003',
-    nom: 'Berrada',
-    prenom: 'Yassine',
-    email: 'yassine.berrada@otoclic.ma',
-    role: 'agent_crc',
-    team_id: 'demo-team-1',
-    team_nom: 'CRC Central Casablanca',
-    telephone: '+212661000003',
-    actif: true,
-    created_at: minutesAgo(60 * 24 * 120),
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000006',
-    nom: 'Bennis',
-    prenom: 'Amina',
-    email: 'amina.bennis@otoclic.ma',
-    role: 'agent_crc',
-    team_id: 'demo-team-1',
-    team_nom: 'CRC Central Casablanca',
-    telephone: '+212661000006',
-    actif: true,
-    created_at: minutesAgo(60 * 24 * 96),
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000007',
-    nom: 'Chraibi',
-    prenom: 'Omar',
-    email: 'omar.chraibi@otoclic.ma',
-    role: 'agent_crc',
-    team_id: 'demo-team-1',
-    team_nom: 'CRC Central Casablanca',
-    telephone: '+212661000007',
-    actif: true,
-    created_at: minutesAgo(60 * 24 * 75),
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000004',
-    nom: 'El Fassi',
-    prenom: 'Hind',
-    email: 'hind.elfassi@otoclic.ma',
-    role: 'responsable_site',
-    team_id: 'demo-team-2',
-    team_nom: 'Showroom Casa Centre',
-    telephone: '+212661000004',
-    actif: true,
-    created_at: minutesAgo(60 * 24 * 150),
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000005',
-    nom: 'Tazi',
-    prenom: 'Reda',
-    email: 'reda.tazi@otoclic.ma',
-    role: 'commercial',
-    team_id: 'demo-team-2',
-    team_nom: 'Showroom Casa Centre',
-    telephone: '+212661000005',
-    actif: true,
-    created_at: minutesAgo(60 * 24 * 88),
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000008',
-    nom: 'Idrissi',
-    prenom: 'Salma',
-    email: 'salma.idrissi@otoclic.ma',
-    role: 'commercial',
-    team_id: 'demo-team-3',
-    team_nom: 'Showroom Rabat Agdal',
-    telephone: '+212661000008',
-    actif: true,
-    created_at: minutesAgo(60 * 24 * 64),
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000009',
-    nom: 'Lahlou',
-    prenom: 'Mehdi',
-    email: 'mehdi.lahlou@otoclic.ma',
-    role: 'lecture_seule',
-    team_id: null,
-    team_nom: null,
-    telephone: null,
-    actif: false,
-    created_at: minutesAgo(60 * 24 * 40),
-  },
-]
-
-const DEMO_TEAMS: AdminTeam[] = [
-  { id: 'demo-team-0', nom: 'Direction Otoclic', type: 'autre', actif: true, membres: 1 },
-  { id: 'demo-team-1', nom: 'CRC Central Casablanca', type: 'crc', actif: true, membres: 4 },
-  { id: 'demo-team-2', nom: 'Showroom Casa Centre', type: 'showroom', actif: true, membres: 2 },
-  { id: 'demo-team-3', nom: 'Showroom Rabat Agdal', type: 'showroom', actif: true, membres: 1 },
-  { id: 'demo-team-4', nom: 'Showroom Marrakech', type: 'showroom', actif: false, membres: 0 },
-]
-
-const DEMO_SITES: AdminSite[] = [
-  {
-    id: 'demo-site-1',
-    nom: 'Showroom Casa Centre',
-    ville: 'Casablanca',
-    adresse: '123 Bd Zerktouni',
-    telephone: '+212522001122',
-    email: 'casa@otoclic.ma',
-    actif: true,
-    commerciaux: 2,
-  },
-  {
-    id: 'demo-site-2',
-    nom: 'Showroom Rabat Agdal',
-    ville: 'Rabat',
-    adresse: '45 Av. Fal Ould Oumeir',
-    telephone: '+212537001122',
-    email: 'rabat@otoclic.ma',
-    actif: true,
-    commerciaux: 1,
-  },
-  {
-    id: 'demo-site-3',
-    nom: 'Showroom Marrakech',
-    ville: 'Marrakech',
-    adresse: '12 Av. Mohammed VI',
-    telephone: '+212524001122',
-    email: 'marrakech@otoclic.ma',
-    actif: true,
-    commerciaux: 0,
-  },
-]
-
-const DEMO_DISPOSITIONS: AdminDisposition[] = [
-  { id: 'disp-1', libelle: 'Répondu — Intéressé', type: 'repond_interesse', action: 'creer_relance', couleur: '#10B981', ordre: 1, actif: true },
-  { id: 'disp-2', libelle: 'Répondu — À rappeler', type: 'repond_rappeler', action: 'creer_relance', couleur: '#F59E0B', ordre: 2, actif: true },
-  { id: 'disp-3', libelle: 'Répondu — Pas intéressé', type: 'repond_pas_interesse', action: 'changer_statut', couleur: '#EF4444', ordre: 3, actif: true },
-  { id: 'disp-4', libelle: 'Pas de réponse', type: 'pas_reponse', action: 'creer_relance', couleur: '#6B7280', ordre: 4, actif: true },
-  { id: 'disp-5', libelle: 'Messagerie', type: 'messagerie', action: 'envoyer_whatsapp', couleur: '#8B5CF6', ordre: 5, actif: true },
-  { id: 'disp-6', libelle: 'Occupé', type: 'occupe', action: 'creer_relance', couleur: '#6B7280', ordre: 6, actif: true },
-  { id: 'disp-7', libelle: 'Numéro erroné / Hors service', type: 'numero_errone', action: 'envoyer_whatsapp', couleur: '#DC2626', ordre: 7, actif: true },
-  { id: 'disp-8', libelle: 'RDV pris', type: 'rdv_pris', action: 'creer_rdv', couleur: '#da3655', ordre: 8, actif: true },
-  { id: 'disp-9', libelle: 'Doublon', type: 'doublon', action: 'changer_statut', couleur: '#8B5CF6', ordre: 9, actif: false },
-  { id: 'disp-10', libelle: 'Ne pas rappeler (DNC)', type: 'dnc', action: 'marquer_dnc', couleur: '#111827', ordre: 10, actif: true },
-]
-
-const DEMO_AUDIT: AdminAuditEntry[] = [
-  { id: 10, table_name: 'leads', operation: 'UPDATE', created_at: minutesAgo(4), auteur: { nom: 'Berrada', prenom: 'Yassine' } },
-  { id: 9, table_name: 'appointments', operation: 'INSERT', created_at: minutesAgo(18), auteur: { nom: 'Mansouri', prenom: 'Sara' } },
-  { id: 8, table_name: 'leads', operation: 'UPDATE', created_at: minutesAgo(33), auteur: { nom: 'Bennis', prenom: 'Amina' } },
-  { id: 7, table_name: 'leads', operation: 'INSERT', created_at: minutesAgo(51), auteur: { nom: 'Chraibi', prenom: 'Omar' } },
-  { id: 6, table_name: 'appointments', operation: 'UPDATE', created_at: minutesAgo(76), auteur: { nom: 'El Fassi', prenom: 'Hind' } },
-  { id: 5, table_name: 'leads', operation: 'DELETE', created_at: minutesAgo(122), auteur: { nom: 'Alami', prenom: 'Karim' } },
-  { id: 4, table_name: 'leads', operation: 'UPDATE', created_at: minutesAgo(170), auteur: { nom: 'Tazi', prenom: 'Reda' } },
-  { id: 3, table_name: 'appointments', operation: 'INSERT', created_at: minutesAgo(240), auteur: { nom: 'Mansouri', prenom: 'Sara' } },
-]
-
-const DEMO_STATS = {
-  totalUsers: 9,
-  activeUsers: 8,
-  totalLeads: 1284,
-  leadsThisMonth: 186,
-  upcomingAppointments: 42,
-  gagnes: 96,
-  conversion: 7.5,
-  callsToday: 318,
-}
-
 export default async function AdminPage() {
-  const { profile, isDemo } = await getCurrentProfile()
+  const { profile } = await getCurrentProfile()
 
   if (!profile) redirect('/login')
   if (profile.role !== 'admin') redirect(getRoleHome(profile.role))
-
-  if (isDemo) {
-    return (
-      <AdminView
-        users={DEMO_USERS}
-        teams={DEMO_TEAMS}
-        sites={DEMO_SITES}
-        dispositions={DEMO_DISPOSITIONS}
-        audit={DEMO_AUDIT}
-        stats={DEMO_STATS}
-        isDemo
-      />
-    )
-  }
 
   const supabase = await createClient()
   let users: AdminUser[] = []
@@ -381,7 +176,6 @@ export default async function AdminPage() {
       dispositions={dispositions}
       audit={audit}
       stats={stats}
-      isDemo={false}
     />
   )
 }

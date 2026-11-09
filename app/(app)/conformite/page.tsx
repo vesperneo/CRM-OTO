@@ -16,91 +16,6 @@ const DEFAULT_POLICY: RetentionPolicy = {
   responsable: 'Délégué à la protection des données Otoclic',
 }
 
-function demoRequests(): DataRequestRow[] {
-  return [
-    {
-      id: 'demo-req-1',
-      lead_id: 'demo-lead-1',
-      type: 'effacement',
-      statut: 'nouvelle',
-      demandeur_nom: 'Youssef Bennani',
-      demandeur_contact: 'youssef.bennani@example.ma',
-      motif: 'Demande de suppression de mes données après achat.',
-      created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      lead: { nom: 'Bennani', prenom: 'Youssef', telephone: '+212661234567' },
-      __demo: true,
-    },
-    {
-      id: 'demo-req-2',
-      type: 'acces',
-      statut: 'traitee',
-      demandeur_nom: 'Fatima El Amrani',
-      demandeur_contact: 'fatima.elamrani@example.ma',
-      motif: 'Je souhaite consulter les données conservées me concernant.',
-      reponse: 'Extrait transmis par email le 02/05/2026.',
-      created_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
-      traite_le: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      __demo: true,
-    },
-  ]
-}
-
-function demoDnc(): DncRow[] {
-  return [
-    {
-      telephone: '+212661000111',
-      telephone_normalise: '+212661000111',
-      raison: 'Opposition au démarchage téléphonique',
-      date_ajout: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-      __demo: true,
-    },
-    {
-      telephone: '+212662222333',
-      telephone_normalise: '+212662222333',
-      raison: 'Demande explicite du prospect',
-      date_ajout: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
-      __demo: true,
-    },
-  ]
-}
-
-function demoLeads(): LeadOptionLite[] {
-  return [
-    { id: 'demo-lead-1', nom: 'Bennani', prenom: 'Youssef', telephone: '+212661234567' },
-    { id: 'demo-lead-2', nom: 'El Amrani', prenom: 'Fatima', telephone: '+212662987654' },
-    { id: 'demo-lead-3', nom: 'Tazi', prenom: 'Mehdi', telephone: '+212663112233' },
-  ]
-}
-
-function demoAudit(): AuditRow[] {
-  return [
-    {
-      id: 1,
-      table_name: 'leads',
-      record_id: 'demo-lead-1',
-      operation: 'UPDATE',
-      created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-      auteur: { nom: 'Alami', prenom: 'Karim' },
-    },
-    {
-      id: 2,
-      table_name: 'appointments',
-      record_id: 'demo-rdv-2',
-      operation: 'INSERT',
-      created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-      auteur: { nom: 'Mansouri', prenom: 'Sara' },
-    },
-    {
-      id: 3,
-      table_name: 'leads',
-      record_id: 'demo-lead-9',
-      operation: 'DELETE',
-      created_at: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(),
-      auteur: { nom: 'Système', prenom: null },
-    },
-  ]
-}
-
 export default async function CompliancePage() {
   let stats: ComplianceStats = {
     leadsTotal: 0,
@@ -183,23 +98,6 @@ export default async function CompliancePage() {
     }
   }
 
-  const useDemo = leads.length === 0
-
-  if (useDemo) {
-    dataRequests = demoRequests()
-    dncEntries = demoDnc()
-    auditLogs = demoAudit()
-    leads = demoLeads()
-    stats = {
-      leadsTotal: 124,
-      consentCount: 112,
-      consentRate: 90.3,
-      dncCount: dncEntries.length,
-      pendingRequests: 1,
-    }
-    policy = DEFAULT_POLICY
-  }
-
   return (
     <ComplianceView
       stats={stats}
@@ -208,7 +106,6 @@ export default async function CompliancePage() {
       auditLogs={auditLogs}
       leads={leads}
       policy={policy}
-      isDemo={useDemo}
     />
   )
 }

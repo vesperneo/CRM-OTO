@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfile } from '@/lib/auth/profile'
-import { getRoleHome } from '@/lib/demo-profile'
+import { getRoleHome } from '@/lib/auth/profile'
 import { formatDate, makeTelLink } from '@/lib/utils'
 
 interface AgentTask {
@@ -53,83 +53,6 @@ const TASK_LABELS: Record<string, { label: string; icon: typeof Phone }> = {
   suivi_commercial: { label: 'Suivi commercial', icon: Target },
 }
 
-function at(offsetDays: number, hours: number, minutes = 0): string {
-  const d = new Date()
-  d.setDate(d.getDate() + offsetDays)
-  d.setHours(hours, minutes, 0, 0)
-  return d.toISOString()
-}
-
-const DEMO_TASKS: AgentTask[] = [
-  {
-    id: 'demo-task-1',
-    type: 'rappel_appel',
-    echeance: at(0, 9, 30),
-    notes: 'Rappeler suite à la demande de devis SUV',
-    lead: { nom: 'Bennani', prenom: 'Youssef', telephone: '+212661234567' },
-  },
-  {
-    id: 'demo-task-2',
-    type: 'whatsapp',
-    echeance: at(0, 11, 0),
-    notes: 'Envoyer la fiche technique du modèle hybride',
-    lead: { nom: 'El Amrani', prenom: 'Fatima', telephone: '+212662987654' },
-  },
-  {
-    id: 'demo-task-3',
-    type: 'confirmation_rdv',
-    echeance: at(0, 14, 0),
-    notes: 'Confirmer le RDV showroom Casa Centre',
-    lead: { nom: 'Tazi', prenom: 'Mehdi', telephone: '+212663112233' },
-  },
-  {
-    id: 'demo-task-4',
-    type: 'reactivation',
-    echeance: at(0, 16, 30),
-    notes: 'Relancer un lead froid — campagne LOA',
-    lead: { nom: 'Chraibi', prenom: 'Salma', telephone: '+212664445566' },
-  },
-]
-
-const DEMO_APPOINTMENTS: AgentAppointment[] = [
-  {
-    id: 'demo-appt-1',
-    debut: at(1, 10, 30),
-    type: 'showroom',
-    statut: 'planifie',
-    lead: { nom: 'Bennani', prenom: 'Youssef', telephone: '+212661234567' },
-  },
-  {
-    id: 'demo-appt-2',
-    debut: at(2, 15, 0),
-    type: 'showroom',
-    statut: 'confirme',
-    lead: { nom: 'El Amrani', prenom: 'Fatima', telephone: '+212662987654' },
-  },
-  {
-    id: 'demo-appt-3',
-    debut: at(3, 11, 0),
-    type: 'appel',
-    statut: 'planifie',
-    lead: { nom: 'Tazi', prenom: 'Mehdi', telephone: '+212663112233' },
-  },
-]
-
-const DEMO_LEADS: AgentLead[] = [
-  { id: 'demo-lead-1', nom: 'Bennani', prenom: 'Youssef', telephone: '+212661234567', statut: 'nouveau', priorite: 2 },
-  { id: 'demo-lead-2', nom: 'El Amrani', prenom: 'Fatima', telephone: '+212662987654', statut: 'a_rappeler', priorite: 1 },
-  { id: 'demo-lead-3', nom: 'Chraibi', prenom: 'Salma', telephone: '+212664445566', statut: 'en_qualification_crc', priorite: 1 },
-  { id: 'demo-lead-4', nom: 'Tazi', prenom: 'Mehdi', telephone: '+212663112233', statut: 'qualifie', priorite: 0 },
-  { id: 'demo-lead-5', nom: 'Idrissi', prenom: 'Nadia', telephone: '+212665778899', statut: 'nouveau', priorite: 2 },
-]
-
-const DEMO_METRICS = {
-  leadsAssignes: 24,
-  appelsJour: 31,
-  tachesJour: 7,
-  rdvAVenir: 3,
-}
-
 const STATUT_LABELS: Record<string, string> = {
   nouveau: 'Nouveau',
   en_qualification_crc: 'En qualification',
@@ -140,21 +63,25 @@ const STATUT_LABELS: Record<string, string> = {
 }
 
 export default async function AgentPage() {
-  const { profile, isDemo } = await getCurrentProfile()
+  const { profile } = await getCurrentProfile()
 
   if (!profile) redirect('/login')
   if (profile.role !== 'agent_crc' && profile.role !== 'admin') {
     redirect(getRoleHome(profile.role))
   }
 
-  let tasks = DEMO_TASKS
-  let appointments = DEMO_APPOINTMENTS
-  let leads = DEMO_LEADS
-  let metrics = DEMO_METRICS
+  let tasks: AgentTask[] = []
+  let appointments: AgentAppointment[] = []
+  let leads: AgentLead[] = []
+  let metrics = {
+    leadsAssignes: 0,
+    appelsJour: 0,
+    tachesJour: 0,
+    rdvAVenir: 0,
+  }
 
-  if (!isDemo) {
-    const supabase = await createClient()
-    const startOfToday = new Date()
+  const supabase = await createClient()
+  const startOfToday = new Date()
     startOfToday.setHours(0, 0, 0, 0)
     const endOfToday = new Date(startOfToday)
     endOfToday.setDate(endOfToday.getDate() + 1)
@@ -212,7 +139,6 @@ export default async function AgentPage() {
       appointments = []
       leads = []
     }
-  }
 
   const heure = new Date().getHours()
   const salutation = heure < 12 ? 'Bonjour' : heure < 18 ? 'Bon après-midi' : 'Bonsoir'
@@ -270,13 +196,6 @@ export default async function AgentPage() {
           Disponible
         </span>
       </div>
-
-      {isDemo && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800 flex items-center gap-2">
-          <Headphones className="w-4 h-4 shrink-0" />
-          Mode démonstration — utilisez le sélecteur de rôle pour tester superviseur ou admin.
-        </div>
-      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {kpis.map((kpi) => {

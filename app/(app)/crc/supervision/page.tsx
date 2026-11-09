@@ -14,102 +14,6 @@ function startOfToday(): string {
   return d.toISOString()
 }
 
-function minutesAgo(minutes: number): string {
-  return new Date(Date.now() - minutes * 60_000).toISOString()
-}
-
-const DEMO_AGENTS: AgentRow[] = [
-  {
-    id: 'demo-agent-1',
-    nom: 'Alami',
-    prenom: 'Karim',
-    email: 'karim.alami@otoclic.ma',
-    statut: 'en_appel',
-    depuis: minutesAgo(4),
-    appelsJour: 28,
-    rdvPris: 6,
-    charge: 12,
-  },
-  {
-    id: 'demo-agent-2',
-    nom: 'Mansouri',
-    prenom: 'Sara',
-    email: 'sara.mansouri@otoclic.ma',
-    statut: 'disponible',
-    depuis: minutesAgo(2),
-    appelsJour: 34,
-    rdvPris: 8,
-    charge: 9,
-  },
-  {
-    id: 'demo-agent-3',
-    nom: 'Berrada',
-    prenom: 'Yassine',
-    email: 'yassine.berrada@otoclic.ma',
-    statut: 'pause',
-    depuis: minutesAgo(8),
-    appelsJour: 19,
-    rdvPris: 3,
-    charge: 17,
-  },
-  {
-    id: 'demo-agent-4',
-    nom: 'El Fassi',
-    prenom: 'Hind',
-    email: 'hind.elfassi@otoclic.ma',
-    statut: 'hors_ligne',
-    depuis: null,
-    appelsJour: 0,
-    rdvPris: 0,
-    charge: 0,
-  },
-]
-
-const DEMO_SLA_LEADS: SlaLeadItem[] = [
-  {
-    id: 'demo-sla-1',
-    nom: 'Bennani',
-    prenom: 'Youssef',
-    telephone: '+212661234567',
-    statut: 'nouveau',
-    created_at: minutesAgo(18),
-    nb_tentatives_appel: 0,
-    dernier_contact: null,
-    assigne_crc_a: 'demo-agent-1',
-    assigne: { nom: 'Alami', prenom: 'Karim' },
-    source: { nom: 'Meta Lead Ads' },
-    __demo: true,
-  },
-  {
-    id: 'demo-sla-2',
-    nom: 'El Amrani',
-    prenom: 'Fatima',
-    telephone: '+212662987654',
-    statut: 'nouveau',
-    created_at: minutesAgo(47),
-    nb_tentatives_appel: 0,
-    dernier_contact: null,
-    assigne_crc_a: 'demo-agent-2',
-    assigne: { nom: 'Mansouri', prenom: 'Sara' },
-    source: { nom: 'Site web' },
-    __demo: true,
-  },
-  {
-    id: 'demo-sla-3',
-    nom: 'Tazi',
-    prenom: 'Mehdi',
-    telephone: '+212663112233',
-    statut: 'nouveau',
-    created_at: minutesAgo(82),
-    nb_tentatives_appel: 0,
-    dernier_contact: null,
-    assigne_crc_a: 'demo-agent-3',
-    assigne: { nom: 'Berrada', prenom: 'Yassine' },
-    source: { nom: 'Google Ads' },
-    __demo: true,
-  },
-]
-
 export default async function SupervisionPage() {
   let agents: AgentRow[] = []
   let agentOptions: ProfileOption[] = []
@@ -242,35 +146,12 @@ export default async function SupervisionPage() {
     }
   }
 
-  const useDemo = agents.length === 0
-
-  if (useDemo) {
-    agents = DEMO_AGENTS
-    agentOptions = DEMO_AGENTS.map((a) => ({
-      id: a.id,
-      nom: a.nom,
-      prenom: a.prenom,
-      role: 'agent_crc',
-    }))
-    slaLeads = DEMO_SLA_LEADS
-    metrics = {
-      enAttente: 14,
-      slaDepasse: DEMO_SLA_LEADS.filter(
-        (lead) => computeLeadSla(lead).level === 'depasse'
-      ).length,
-      appelsJour: 81,
-      rdvConfirmes: 17,
-      tauxConversion: 21,
-    }
-  }
-
   return (
     <SupervisionView
       initialAgents={agents}
       initialMetrics={metrics}
       slaLeads={slaLeads}
       agentOptions={agentOptions}
-      isDemo={useDemo}
     />
   )
 }

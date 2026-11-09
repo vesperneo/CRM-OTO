@@ -76,7 +76,7 @@ export default async function DashboardPage() {
   const stats = [
     {
       label: 'Total leads',
-      value: totalLeads ?? 124,
+      value: totalLeads ?? 0,
       change: '+14% ce mois',
       icon: Users,
       color: 'text-brand-600',
@@ -84,7 +84,7 @@ export default async function DashboardPage() {
     },
     {
       label: 'Nouveaux à traiter',
-      value: newLeadsCount ?? 18,
+      value: newLeadsCount ?? 0,
       change: 'Priorité CRC',
       icon: Clock,
       color: 'text-purple-600',
@@ -92,7 +92,7 @@ export default async function DashboardPage() {
     },
     {
       label: 'Qualifiés CRC',
-      value: qualifiedCount ?? 45,
+      value: qualifiedCount ?? 0,
       change: 'Taux transf. 36%',
       icon: CheckCircle2,
       color: 'text-emerald-600',
@@ -100,7 +100,7 @@ export default async function DashboardPage() {
     },
     {
       label: 'RDV Showroom',
-      value: rdvCount ?? 12,
+      value: rdvCount ?? 0,
       change: 'Semaine en cours',
       icon: Calendar,
       color: 'text-amber-600',
@@ -108,55 +108,8 @@ export default async function DashboardPage() {
     },
   ]
 
-  const displayLeads = recentLeads && recentLeads.length > 0 ? recentLeads : [
-    {
-      id: 'demo-1',
-      nom: 'Bennani',
-      prenom: 'Youssef',
-      telephone: '+212661234567',
-      statut: 'nouveau',
-      source: { nom: 'Meta Lead Ads' },
-      budget: 280000,
-      created_at: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
-    },
-    {
-      id: 'demo-2',
-      nom: 'El Amrani',
-      prenom: 'Fatima',
-      telephone: '+212662987654',
-      statut: 'en_qualification_crc',
-      source: { nom: 'Site web' },
-      budget: 350000,
-      created_at: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-    },
-    {
-      id: 'demo-3',
-      nom: 'Tazi',
-      prenom: 'Mehdi',
-      telephone: '+212663112233',
-      statut: 'rdv_planifie',
-      source: { nom: 'Google Ads' },
-      budget: 420000,
-      created_at: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
-    },
-  ]
-
-  const displayTasks = urgentTasks && urgentTasks.length > 0 ? urgentTasks : [
-    {
-      id: 'demo-task-1',
-      type: 'rappel_appel',
-      echeance: new Date(new Date().setHours(15, 0, 0, 0)).toISOString(),
-      notes: 'Demande rappel à 15h00 (reprise véhicule)',
-      lead: { prenom: 'Youssef', nom: 'Bennani' },
-    },
-    {
-      id: 'demo-task-2',
-      type: 'confirmation_rdv',
-      echeance: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      notes: 'Showroom Casablanca Centre',
-      lead: { prenom: 'Mehdi', nom: 'Tazi' },
-    },
-  ]
+  const displayLeads = recentLeads ?? []
+  const displayTasks = urgentTasks ?? []
 
   const slaTone =
     slaDepasse > 0

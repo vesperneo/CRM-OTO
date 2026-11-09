@@ -194,9 +194,19 @@ export default function AdminView({
   const [error, setError] = useState<string | null>(null)
 
   const [inviteOpen, setInviteOpen] = useState(false)
+  const [userModal, setUserModal] = useState<AdminUser | null>(null)
   const [teamModal, setTeamModal] = useState<AdminTeam | 'new' | null>(null)
   const [siteModal, setSiteModal] = useState<AdminSite | 'new' | null>(null)
   const [dispModal, setDispModal] = useState<AdminDisposition | 'new' | null>(null)
+
+  const [userForm, setUserForm] = useState({
+    prenom: '',
+    nom: '',
+    telephone: '',
+    role: 'agent_crc',
+    team_id: '',
+    actif: true,
+  })
 
   const [inviteForm, setInviteForm] = useState({
     prenom: '',
@@ -304,6 +314,55 @@ export default function AdminView({
       })
     )
     setSaving(false)
+    router.refresh()
+    flash('Utilisateur mis à jour.')
+  }
+
+  function openUser(user: AdminUser) {
+    setUserModal(user)
+    setUserForm({
+      prenom: user.prenom ?? '',
+      nom: user.nom,
+      telephone: user.telephone ?? '',
+      role: user.role,
+      team_id: user.team_id ?? '',
+      actif: user.actif,
+    })
+  }
+
+  async function handleUserSave() {
+    if (!userModal) return
+    setSaving(true)
+    setError(null)
+
+    const patch = {
+      prenom: userForm.prenom.trim() || null,
+      nom: userForm.nom.trim(),
+      telephone: userForm.telephone.trim() || null,
+      role: userForm.role,
+      team_id: userForm.team_id || null,
+      actif: userForm.actif,
+    }
+
+    if (!isDemo) {
+      const res = await updateUserProfile(userModal.id, patch)
+      if (!res.success) {
+        setSaving(false)
+        fail(res.error ?? 'Mise à jour impossible.')
+        return
+      }
+    }
+
+    const teamNom = teams.find((t) => t.id === patch.team_id)?.nom ?? null
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === userModal.id
+          ? { ...u, ...patch, team_nom: teamNom }
+          : u
+      )
+    )
+    setSaving(false)
+    setUserModal(null)
     router.refresh()
     flash('Utilisateur mis à jour.')
   }
@@ -704,14 +763,6 @@ export default function AdminView({
         </button>
       </div>
 
-      {isDemo && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800 flex items-center gap-2">
-          <Activity className="w-4 h-4 shrink-0" />
-          Mode démonstration — les actions sont simulées localement. Utilisez le sélecteur
-          de rôle en haut à droite pour tester les autres panneaux.
-        </div>
-      )}
-
       {notice && (
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-800 flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
@@ -740,11 +791,10 @@ export default function AdminView({
               key={t.key}
               type="button"
               onClick={() => setTab(t.key)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
-                active
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${active
                   ? 'bg-gray-900 text-white shadow-sm'
                   : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'
-              }`}
+                }`}
             >
               <Icon className="w-3.5 h-3.5" />
               {t.label}
@@ -875,13 +925,12 @@ export default function AdminView({
                 {audit.slice(0, 6).map((entry) => (
                   <div key={entry.id} className="flex items-center gap-3 py-2">
                     <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
-                        entry.operation === 'INSERT'
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${entry.operation === 'INSERT'
                           ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                           : entry.operation === 'DELETE'
                             ? 'bg-red-50 text-red-700 border-red-200'
                             : 'bg-brand-50 text-brand-700 border-brand-200'
-                      }`}
+                        }`}
                     >
                       {entry.operation}
                     </span>
@@ -1004,9 +1053,8 @@ export default function AdminView({
                         value={u.role}
                         disabled={saving}
                         onChange={(e) => patchUser(u.id, { role: e.target.value })}
-                        className={`text-[11px] font-semibold border rounded-full px-2.5 py-1 ${
-                          ROLE_STYLES[u.role] ?? ROLE_STYLES.lecture_seule
-                        }`}
+                        className={`text-[11px] font-semibold border rounded-full px-2.5 py-1 ${ROLE_STYLES[u.role] ?? ROLE_STYLES.lecture_seule
+                          }`}
                       >
                         {ROLES.map((r) => (
                           <option key={r.value} value={r.value}>
@@ -1034,32 +1082,49 @@ export default function AdminView({
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`inline-flex items-center gap-1.5 text-[11px] font-semibold ${
-                          u.actif ? 'text-emerald-700' : 'text-gray-400'
-                        }`}
+                        className={`inline-flex items-center gap-1.5 text-[11px] font-semibold ${u.actif ? 'text-emerald-700' : 'text-gray-400'
+                          }`}
                       >
                         <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            u.actif ? 'bg-emerald-500' : 'bg-gray-300'
-                          }`}
+                          className={`w-1.5 h-1.5 rounded-full ${u.actif ? 'bg-emerald-500' : 'bg-gray-300'
+                            }`}
                         />
                         {u.actif ? 'Actif' : 'Inactif'}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button
-                        type="button"
-                        title={u.actif ? 'Désactiver' : 'Réactiver'}
-                        disabled={saving}
-                        onClick={() => patchUser(u.id, { actif: !u.actif })}
-                        className={`p-1.5 rounded-lg border transition-colors ${
-                          u.actif
-                            ? 'border-red-100 text-red-600 hover:bg-red-50'
-                            : 'border-emerald-100 text-emerald-600 hover:bg-emerald-50'
-                        }`}
-                      >
-                        <Power className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          title="Modifier"
+                          disabled={saving}
+                          onClick={() => openUser(u)}
+                          className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          title={u.actif ? 'Désactiver' : 'Réactiver'}
+                          disabled={saving}
+                          onClick={() => patchUser(u.id, { actif: !u.actif })}
+                          className={`p-1.5 rounded-lg border transition-colors ${u.actif
+                              ? 'border-red-100 text-red-600 hover:bg-red-50'
+                              : 'border-emerald-100 text-emerald-600 hover:bg-emerald-50'
+                            }`}
+                        >
+                          <Power className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          title="Supprimer l'utilisateur"
+                          disabled={saving}
+                          onClick={() => handleDeleteUser(u)}
+                          className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -1081,9 +1146,8 @@ export default function AdminView({
                     <p className="text-[11px] text-gray-400 truncate">{u.email}</p>
                   </div>
                   <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
-                      ROLE_STYLES[u.role] ?? ROLE_STYLES.lecture_seule
-                    }`}
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${ROLE_STYLES[u.role] ?? ROLE_STYLES.lecture_seule
+                      }`}
                   >
                     {roleLabel(u.role)}
                   </span>
@@ -1120,6 +1184,15 @@ export default function AdminView({
                     {u.actif ? 'Compte actif' : 'Compte inactif'}
                   </span>
                   <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={() => openUser(u)}
+                      className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
+                      title="Modifier l'utilisateur"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
                     <button
                       type="button"
                       disabled={saving}
@@ -1174,9 +1247,8 @@ export default function AdminView({
               {teams.map((t) => (
                 <div
                   key={t.id}
-                  className={`rounded-xl border p-4 ${
-                    t.actif ? 'border-gray-200' : 'border-gray-100 bg-gray-50 opacity-70'
-                  }`}
+                  className={`rounded-xl border p-4 ${t.actif ? 'border-gray-200' : 'border-gray-100 bg-gray-50 opacity-70'
+                    }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="w-9 h-9 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center">
@@ -1203,11 +1275,10 @@ export default function AdminView({
                       type="button"
                       disabled={saving}
                       onClick={() => toggleTeam(t)}
-                      className={`px-2 py-1.5 rounded-lg text-[11px] font-semibold border ${
-                        t.actif
+                      className={`px-2 py-1.5 rounded-lg text-[11px] font-semibold border ${t.actif
                           ? 'border-amber-200 text-amber-700 hover:bg-amber-50'
                           : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
-                      }`}
+                        }`}
                     >
                       {t.actif ? 'Désactiver' : 'Activer'}
                     </button>
@@ -1247,20 +1318,18 @@ export default function AdminView({
               {sites.map((s) => (
                 <div
                   key={s.id}
-                  className={`rounded-xl border p-4 ${
-                    s.actif ? 'border-gray-200' : 'border-gray-100 bg-gray-50 opacity-70'
-                  }`}
+                  className={`rounded-xl border p-4 ${s.actif ? 'border-gray-200' : 'border-gray-100 bg-gray-50 opacity-70'
+                    }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
                       <Building2 className="w-4 h-4" />
                     </div>
                     <span
-                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                        s.actif
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${s.actif
                           ? 'bg-emerald-50 text-emerald-700'
                           : 'bg-gray-100 text-gray-500'
-                      }`}
+                        }`}
                     >
                       {s.actif ? 'Ouvert' : 'Fermé'}
                     </span>
@@ -1283,11 +1352,10 @@ export default function AdminView({
                       type="button"
                       disabled={saving}
                       onClick={() => toggleSite(s)}
-                      className={`px-2 py-1.5 rounded-lg text-[11px] font-semibold border ${
-                        s.actif
+                      className={`px-2 py-1.5 rounded-lg text-[11px] font-semibold border ${s.actif
                           ? 'border-amber-200 text-amber-700 hover:bg-amber-50'
                           : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
-                      }`}
+                        }`}
                     >
                       {s.actif ? 'Fermer' : 'Ouvrir'}
                     </button>
@@ -1364,9 +1432,8 @@ export default function AdminView({
                       <td className="px-4 py-3 text-[11px] text-gray-500">{d.ordre}</td>
                       <td className="px-4 py-3">
                         <span
-                          className={`text-[11px] font-semibold ${
-                            d.actif ? 'text-emerald-700' : 'text-gray-400'
-                          }`}
+                          className={`text-[11px] font-semibold ${d.actif ? 'text-emerald-700' : 'text-gray-400'
+                            }`}
                         >
                           {d.actif ? 'Active' : 'Inactive'}
                         </span>
@@ -1385,11 +1452,10 @@ export default function AdminView({
                             type="button"
                             disabled={saving}
                             onClick={() => toggleDisposition(d)}
-                            className={`p-1.5 rounded-lg border ${
-                              d.actif
+                            className={`p-1.5 rounded-lg border ${d.actif
                                 ? 'border-amber-200 text-amber-600 hover:bg-amber-50'
                                 : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
-                            }`}
+                              }`}
                             title={d.actif ? 'Désactiver' : 'Activer'}
                           >
                             <Power className="w-3.5 h-3.5" />
@@ -1428,13 +1494,12 @@ export default function AdminView({
             {audit.map((entry) => (
               <div key={entry.id} className="flex items-center gap-3 px-4 py-3">
                 <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border shrink-0 ${
-                    entry.operation === 'INSERT'
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border shrink-0 ${entry.operation === 'INSERT'
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                       : entry.operation === 'DELETE'
                         ? 'bg-red-50 text-red-700 border-red-200'
                         : 'bg-brand-50 text-brand-700 border-brand-200'
-                  }`}
+                    }`}
                 >
                   {entry.operation}
                 </span>
@@ -1458,6 +1523,119 @@ export default function AdminView({
             )}
           </div>
         </div>
+      )}
+
+      {userModal && (
+        <Modal
+          title="Modifier l’utilisateur"
+          subtitle={userModal.email}
+          onClose={() => setUserModal(null)}
+        >
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-medium text-gray-600 mb-1">
+                  Prénom
+                </label>
+                <input
+                  value={userForm.prenom}
+                  onChange={(e) =>
+                    setUserForm({ ...userForm, prenom: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-medium text-gray-600 mb-1">
+                  Nom *
+                </label>
+                <input
+                  value={userForm.nom}
+                  onChange={(e) => setUserForm({ ...userForm, nom: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-[11px] font-medium text-gray-600 mb-1">
+                Téléphone
+              </label>
+              <input
+                value={userForm.telephone}
+                onChange={(e) =>
+                  setUserForm({ ...userForm, telephone: e.target.value })
+                }
+                placeholder="+212661000000"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-medium text-gray-600 mb-1">
+                  Rôle
+                </label>
+                <select
+                  value={userForm.role}
+                  onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
+                >
+                  {ROLES.map((r) => (
+                    <option key={r.value} value={r.value}>
+                      {r.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[11px] font-medium text-gray-600 mb-1">
+                  Équipe
+                </label>
+                <select
+                  value={userForm.team_id}
+                  onChange={(e) =>
+                    setUserForm({ ...userForm, team_id: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
+                >
+                  <option value="">Sans équipe</option>
+                  {teams.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.nom}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
+              <input
+                type="checkbox"
+                checked={userForm.actif}
+                onChange={(e) =>
+                  setUserForm({ ...userForm, actif: e.target.checked })
+                }
+                className="rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+              />
+              Compte actif
+            </label>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setUserModal(null)}
+                className="px-3 py-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                disabled={saving || !userForm.nom.trim()}
+                onClick={handleUserSave}
+                className="px-3 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs font-semibold"
+              >
+                Enregistrer
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
 
       {inviteOpen && (
