@@ -35,7 +35,7 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
 
-  const publicRoutes = ['/login', '/auth/callback', '/rdv']
+  const publicRoutes = ['/login', '/auth/callback', '/reset-password', '/rdv']
   const isPublicRoute = publicRoutes.some(r => pathname.startsWith(r))
   const isPublicApi = pathname.startsWith('/api/webhooks')
 
